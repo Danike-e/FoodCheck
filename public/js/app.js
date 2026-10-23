@@ -366,7 +366,8 @@ function setStatus(kind, opts = {}) {
         <button type="button" class="chip" data-postcode="G3 7TF">G3 7TF</button>
         <button type="button" class="chip" data-postcode="SW1A 1AA">SW1A 1AA</button>
         <button type="button" class="chip" data-postcode="EH1 1YZ">EH1 1YZ</button>
-      </p>`;
+      </p>
+      <p><a class="status__more" href="about.html">New to FoodCheck? See how it works</a></p>`;
     renderLegend();
     return;
   }

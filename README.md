@@ -67,6 +67,8 @@ Businesses with no coordinates stay in the list, marked "No map location", and d
 ```
 public/                   Everything the browser can load (Vercel output directory)
   index.html              App page (search, map, list, settings dialog)
+  about.html              About / landing page: what FoodCheck does, ratings explained, install, FAQ
+  img/app-phone.jpg       App screenshot used on the About page
   history.html            Search history page
   privacy.html            Privacy policy
   terms.html              Terms of use

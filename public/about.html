@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>About FoodCheck · Food hygiene ratings near you</title>
+  <meta name="description" content="FoodCheck shows the official food hygiene rating of every restaurant, takeaway, café and shop near you, on a map and in a list. Free, private, and no sign-up.">
+  <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1F1E1D" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preload" href="vendor/fonts/source-serif-4-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="doc-page landing-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="doc-header">
+    <div class="doc-header__inner landing__header">
+      <a class="brand" href="./" aria-label="FoodCheck home">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="currentColor"/>
+          <circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="2.2"/>
+          <path d="M11.8 16.3l2.9 2.9 5.6-6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand__name">FoodCheck</span>
+      </a>
+      <a class="btn btn--primary btn--small" href="./">Open FoodCheck</a>
+    </div>
+  </header>
+
+  <main class="landing" id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__text">
+        <p class="hero__eyebrow">Free · No sign-up · Works across the UK</p>
+        <h1 class="hero__title" id="hero-title">Know how clean the kitchen is before you eat.</h1>
+        <p class="hero__lead">FoodCheck shows the official food hygiene rating of every restaurant, takeaway, café, pub and shop near you, on a map and in a list. It takes seconds.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="./">Find ratings near me</a>
+          <a class="btn btn--outline" href="#how">How it works</a>
+        </div>
+        <p class="hero__note">Ratings come straight from the Food Standards Agency and local council inspections.</p>
+      </div>
+      <figure class="hero__visual">
+        <div class="phone">
+          <img src="img/app-phone.jpg" width="780" height="1560" alt="FoodCheck on a phone: a map of central London covered in green rating pins, above a list starting with Le Signore Snack Bar, rated 3 out of 5, and Palace Restaurant, rated 4 out of 5." loading="eager" decoding="async">
+        </div>
+      </figure>
+    </section>
+
+    <section class="band" id="how" aria-labelledby="how-title">
+      <h2 class="band__title" id="how-title">Three ways to search</h2>
+      <ul class="features features--3">
+        <li class="feature">
+          <svg class="feature__icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <h3>Type a postcode</h3>
+          <p>With or without the space, in any case. Every business within 1, 2 or 5 miles appears, nearest first.</p>
+        </li>
+        <li class="feature">
+          <svg class="feature__icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3" fill="currentColor"/><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <h3>Use your location</h3>
+          <p>One tap finds what’s around you right now. Your position is only used for that search, and it isn’t stored.</p>
+        </li>
+        <li class="feature">
+          <svg class="feature__icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 17.5s-5.5-5-5.5-9a5.5 5.5 0 0 1 11 0c0 4-5.5 9-5.5 9z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="10" cy="8.5" r="2" fill="currentColor"/></svg>
+          <h3>Press and hold the map</h3>
+          <p>Planning a trip? Hold anywhere on the map, or right-click on a computer, to see ratings around that spot.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="band band--tint" aria-labelledby="ratings-title">
+      <div class="split">
+        <div>
+          <h2 class="band__title" id="ratings-title">What the ratings mean</h2>
+          <p>Council food safety officers inspect how food is handled, stored and prepared, how clean the premises are, and how food safety is managed. The business gets a rating based on what they find on the day.</p>
+          <p>Every pin and badge in FoodCheck shows the number or result, not just a colour, so ratings are clear for everyone.</p>
+        </div>
+        <ul class="scale" aria-label="Food Hygiene Rating Scheme, used in England, Wales and Northern Ireland">
+          <li class="scale__item"><div class="badge tone--r5 " role="img" aria-label="Rating 5 out of 5"><span class="badge__value" aria-hidden="true">5</span><span class="badge__scale">out of 5</span></div><span>Hygiene standards are very good</span></li>
+          <li class="scale__item"><div class="badge tone--r4 " role="img" aria-label="Rating 4 out of 5"><span class="badge__value" aria-hidden="true">4</span><span class="badge__scale">out of 5</span></div><span>Hygiene standards are good</span></li>
+          <li class="scale__item"><div class="badge tone--r3 " role="img" aria-label="Rating 3 out of 5"><span class="badge__value" aria-hidden="true">3</span><span class="badge__scale">out of 5</span></div><span>Hygiene standards are generally satisfactory</span></li>
+          <li class="scale__item"><div class="badge tone--r2 " role="img" aria-label="Rating 2 out of 5"><span class="badge__value" aria-hidden="true">2</span><span class="badge__scale">out of 5</span></div><span>Some improvement is necessary</span></li>
+          <li class="scale__item"><div class="badge tone--r1 " role="img" aria-label="Rating 1 out of 5"><span class="badge__value" aria-hidden="true">1</span><span class="badge__scale">out of 5</span></div><span>Major improvement is necessary</span></li>
+          <li class="scale__item"><div class="badge tone--r1 " role="img" aria-label="Rating 0 out of 5"><span class="badge__value" aria-hidden="true">0</span><span class="badge__scale">out of 5</span></div><span>Urgent improvement is necessary</span></li>
+        </ul>
+      </div>
+      <div class="split split--secondary">
+        <div>
+          <h3>In Scotland</h3>
+          <p>Scotland uses its own scheme, and FoodCheck switches to it automatically.</p>
+        </div>
+        <ul class="scale scale--row" aria-label="Food Hygiene Information Scheme, used in Scotland">
+          <li class="scale__item"><div class="badge tone--pass badge--word" role="img" aria-label="Result: Pass"><span class="badge__value" aria-hidden="true">Pass</span></div><span>Meets the legal requirements</span></li>
+          <li class="scale__item"><div class="badge tone--fail " role="img" aria-label="Result: Improvement required"><span class="badge__value" aria-hidden="true">!</span></div><span>Improvement required</span></li>
+          <li class="scale__item"><div class="badge tone--none " role="img" aria-label="Not yet rated"><span class="badge__value" aria-hidden="true">–</span></div><span>Awaiting inspection, or exempt</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="features-title">
+      <h2 class="band__title" id="features-title">Built for deciding where to eat</h2>
+      <ul class="features">
+        <li class="feature"><h3>Filter what matters</h3><p>Only show places rated 4 or better, or only takeaways, pubs or cafés. Choose 1, 2 or 5 miles.</p></li>
+        <li class="feature"><h3>Map and list together</h3><p>Tap a pin to jump to the business in the list, or tap the list to find it on the map. Expand the map to full screen whenever you like.</p></li>
+        <li class="feature"><h3>Every place, page by page</h3><p>Busy areas have thousands of businesses. Results come 50 at a time, nearest first, so you can page through them all.</p></li>
+        <li class="feature"><h3>The official record</h3><p>Each listing links to its page on the Food Standards Agency website, with the inspection date.</p></li>
+        <li class="feature"><h3>Your recent searches</h3><p>Places you’ve checked are a tap away under the search box and on the History page. You can turn this off.</p></li>
+        <li class="feature"><h3>Light or dark</h3><p>Match your phone, or choose light or dark mode in Settings. Large, high-contrast badges work for everyone.</p></li>
+      </ul>
+    </section>
+
+    <section class="band band--tint" aria-labelledby="install-title">
+      <div class="split">
+        <div>
+          <h2 class="band__title" id="install-title">Put it on your home screen</h2>
+          <p>FoodCheck works like an app. Once installed, it opens full screen, and your recent results are there even without a signal.</p>
+        </div>
+        <ol class="steps">
+          <li><strong>iPhone or iPad:</strong> open FoodCheck in Safari, tap the Share button, then <em>Add to Home Screen</em>.</li>
+          <li><strong>Android:</strong> open FoodCheck in Chrome, tap the ⋮ menu, then <em>Install app</em> or <em>Add to Home screen</em>.</li>
+          <li><strong>Computer:</strong> in Chrome or Edge, select the install icon in the address bar.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="privacy-title">
+      <div class="split">
+        <div>
+          <h2 class="band__title" id="privacy-title">Private by design</h2>
+          <p>There are no accounts, no cookies, no adverts and no tracking. Your settings and search history stay on your own device, and you can clear them at any time.</p>
+          <p><a href="privacy.html">Read the privacy policy</a></p>
+        </div>
+        <ul class="ticks">
+          <li>No sign-up or email address</li>
+          <li>No cookies or analytics</li>
+          <li>Location used only when you ask</li>
+          <li>History kept on your device only</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band band--tint" aria-labelledby="faq-title">
+      <h2 class="band__title" id="faq-title">Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Where does the information come from?</summary>
+          <p>From the Food Standards Agency’s open data. Local councils inspect businesses and publish the results there. FoodCheck shows them unchanged, alongside a link to each official record.</p>
+        </details>
+        <details>
+          <summary>How up to date are the ratings?</summary>
+          <p>A rating reflects what the inspector found on the day of the last inspection, and FoodCheck shows that date. Businesses are inspected more or less often depending on their risk, and they can ask for a re-inspection after making improvements. Always check the official record before making an important decision.</p>
+        </details>
+        <details>
+          <summary>What does “Awaiting inspection” or “Exempt” mean?</summary>
+          <p>“Awaiting inspection” usually means a new or newly registered business that hasn’t been inspected yet. “Exempt” businesses are very low risk, such as a newsagent selling only packaged food, so they aren’t rated.</p>
+        </details>
+        <details>
+          <summary>Why isn’t a business on the map?</summary>
+          <p>A few businesses have no map location in the official data, such as mobile caterers or market stalls. They still appear in the list, marked “No map location”.</p>
+        </details>
+        <details>
+          <summary>Is FoodCheck run by the Food Standards Agency?</summary>
+          <p>No. FoodCheck is an independent, free tool built on the Food Standards Agency’s public data. It isn’t affiliated with the FSA or any council.</p>
+        </details>
+        <details>
+          <summary>Does it cost anything?</summary>
+          <p>No. There’s nothing to buy, no subscription and no sign-up.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="cta" aria-labelledby="cta-title">
+      <h2 class="cta__title" id="cta-title">Check somewhere now</h2>
+      <p>Type a postcode or use your location. Results take a couple of seconds.</p>
+      <a class="btn btn--primary" href="./">Open FoodCheck</a>
+    </section>
+  </main>
+
+  <div class="doc-footer">
+    <footer class="footer doc-footer__inner">
+      <nav aria-label="Legal and accessibility">
+        <ul class="footer__links">
+          <li><a href="./">Search</a></li>
+          <li><a href="about.html" aria-current="page">About</a></li>
+          <li><a href="history.html">History</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms of use</a></li>
+          <li><a href="accessibility.html">Accessibility</a></li>
+        </ul>
+      </nav>
+      <p>Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener noreferrer" target="_blank">Open Government Licence v3.0</a>. Data from the <a href="https://ratings.food.gov.uk/" rel="noopener noreferrer" target="_blank">Food Standards Agency</a>. Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">OpenStreetMap</a> contributors.</p>
+    </footer>
+  </div>
+</body>
+</html>
