@@ -361,7 +361,7 @@ a.icon-btn { text-decoration: none; }
 }
 .search__label { font-size: 14px; font-weight: 600; }
 
-.search__row { display: flex; gap: 8px; }
+.search__row { display: flex; gap: 0; }
 
 .search__field { position: relative; flex: 1; min-width: 0; }
 .search__icon {
@@ -386,6 +386,25 @@ a.icon-btn { text-decoration: none; }
 #postcode::placeholder { color: var(--ink-3); text-transform: none; letter-spacing: 0; font-weight: 400; }
 #postcode:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
 #postcode[aria-invalid="true"] { border-color: var(--r1); }
+
+/* Postcode box and Search button joined as one control: rounded outer corners, flat
+   and flush where they meet. The box's right border is hidden by the button. */
+.search__row #postcode { border-top-right-radius: 0; border-bottom-right-radius: 0; border-right-width: 0; }
+.search__row #postcode:focus { position: relative; z-index: 1; }
+.search__row .btn--primary {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border: 1px solid var(--accent);
+}
+.search__row .btn--primary:hover { border-color: var(--accent-hover); }
+.search__row .btn--primary:focus-visible {
+  /* Ring drawn inside the button so it doesn't open a gap between the two halves */
+  outline: 2px solid var(--accent-ink);
+  outline-offset: -5px;
+  position: relative;
+  z-index: 2;
+}
+.search__row .search__icon { z-index: 2; }
 
 .search__error {
   margin-top: 8px;

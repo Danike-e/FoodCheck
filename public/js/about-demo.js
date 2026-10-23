@@ -14,7 +14,7 @@
 
 // x / y are percentages of the app screen (captured from the real layout).
 const SCENES = [
-  { frame: 0, step: 0, dwell: 1100, action: { x: 37, y: 18.3, kind: 'tap' } },     // tap the postcode box
+  { frame: 0, step: 0, dwell: 1100, action: { x: 38, y: 18.3, kind: 'tap' } },     // tap the postcode box
   { frame: 1, step: 0, dwell: 800, action: { x: 84.1, y: 18.3, kind: 'tap' } },    // tap Search
   { frame: 2, step: 1, dwell: 2200, action: { x: 46.3, y: 85.3, kind: 'tap' } },   // tap a place in the list
   { frame: 3, step: 2, dwell: 2000, action: { x: 12, y: 21, kind: 'hold' } },      // press and hold the map
