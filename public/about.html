@@ -15,6 +15,7 @@
   <script src="js/theme-init.js"></script>
   <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/about-demo.js"></script>
 </head>
 <body class="doc-page landing-page">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -33,7 +34,7 @@
   </header>
 
   <main class="landing" id="main">
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero hero--text" aria-labelledby="hero-title">
       <div class="hero__text">
         <p class="hero__eyebrow">Free · No sign-up · Works across the UK</p>
         <h1 class="hero__title" id="hero-title">Know how clean the kitchen is before you eat.</h1>
@@ -44,14 +45,88 @@
         </div>
         <p class="hero__note">Ratings come straight from the Food Standards Agency and local council inspections.</p>
       </div>
-      <figure class="hero__visual">
-        <div class="phone">
-          <img src="img/app-phone.jpg" width="780" height="1560" alt="FoodCheck on a phone: a map of central London covered in green rating pins, above a list starting with Le Signore Snack Bar, rated 3 out of 5, and Palace Restaurant, rated 4 out of 5." loading="eager" decoding="async">
-        </div>
-      </figure>
     </section>
 
-    <section class="band" id="how" aria-labelledby="how-title">
+    <section class="band demo" id="how" aria-labelledby="demo-title">
+      <div class="demo__layout">
+        <div class="demo__head">
+          <h2 class="band__title" id="demo-title">See how it works</h2>
+          <p>Finding a rating takes seconds. Here’s FoodCheck on an iPhone. Select a step to jump to it.</p>
+        </div>
+        <div class="demo__body">
+          <ol class="demo-steps" id="demo-steps">
+          <li class="demo-steps__item" data-step="0">
+            <button type="button" class="demo-steps__btn">
+              <span class="demo-steps__num" aria-hidden="true">1</span>
+              <span class="demo-steps__text"><strong>Enter a postcode</strong><span>Type it in, with or without the space. Or tap <em>Use my location</em>.</span></span>
+            </button>
+          </li>
+          <li class="demo-steps__item" data-step="1">
+            <button type="button" class="demo-steps__btn">
+              <span class="demo-steps__num" aria-hidden="true">2</span>
+              <span class="demo-steps__text"><strong>See every rating nearby</strong><span>Pins on the map, and a list sorted by distance.</span></span>
+            </button>
+          </li>
+          <li class="demo-steps__item" data-step="2">
+            <button type="button" class="demo-steps__btn">
+              <span class="demo-steps__num" aria-hidden="true">3</span>
+              <span class="demo-steps__text"><strong>Tap a place</strong><span>It’s highlighted on the map, with its rating.</span></span>
+            </button>
+          </li>
+          <li class="demo-steps__item" data-step="3">
+            <button type="button" class="demo-steps__btn">
+              <span class="demo-steps__num" aria-hidden="true">4</span>
+              <span class="demo-steps__text"><strong>Press and hold the map</strong><span>Search around any spot, handy for planning ahead.</span></span>
+            </button>
+          </li>
+          <li class="demo-steps__item" data-step="4">
+            <button type="button" class="demo-steps__btn">
+              <span class="demo-steps__num" aria-hidden="true">5</span>
+              <span class="demo-steps__text"><strong>Go full screen</strong><span>Expand the map to explore the whole area.</span></span>
+            </button>
+          </li>
+          </ol>
+          <button type="button" class="btn btn--outline demo__toggle" id="demo-toggle">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path class="i-pause" d="M7 4.5v11M13 4.5v11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path class="i-play" d="M6.5 4.3v11.4L16 10z" fill="currentColor"/></svg>
+            <span>Pause animation</span>
+          </button>
+        </div>
+
+        <figure class="demo__device" role="img" aria-label="Animation of FoodCheck on an iPhone, following the steps listed here.">
+          <div class="iphone" aria-hidden="true">
+            <span class="iphone__key iphone__key--action"></span>
+            <span class="iphone__key iphone__key--vol-up"></span>
+            <span class="iphone__key iphone__key--vol-down"></span>
+            <span class="iphone__key iphone__key--side"></span>
+            <span class="iphone__key iphone__key--camera"></span>
+            <div class="iphone__screen">
+              <div class="iphone__status">
+                <span class="iphone__time">9:41</span>
+                <span class="iphone__island"></span>
+                <span class="iphone__icons">
+                  <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+                  <svg viewBox="0 0 16 12"><path d="M8 11.5l2.6-3a3.6 3.6 0 0 0-5.2 0zM3.4 6.3a6.6 6.6 0 0 1 9.2 0l1.6-1.8a9 9 0 0 0-12.4 0zM.1 2.6a11.4 11.4 0 0 1 15.8 0" /></svg>
+                  <svg viewBox="0 0 28 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2.5" y="2.5" width="17" height="8" rx="2"/><path d="M25.5 4.5v4a2 2 0 0 0 0-4z" opacity=".4"/></svg>
+                </span>
+              </div>
+              <div class="iphone__app">
+              <img class="demo-frame is-active" src="img/demo/step-1.webp" width="603" height="1218" alt="" loading="lazy" decoding="async">
+              <img class="demo-frame" src="img/demo/step-2.webp" width="603" height="1218" alt="" loading="lazy" decoding="async">
+              <img class="demo-frame" src="img/demo/step-3.webp" width="603" height="1218" alt="" loading="lazy" decoding="async">
+              <img class="demo-frame" src="img/demo/step-4.webp" width="603" height="1218" alt="" loading="lazy" decoding="async">
+              <img class="demo-frame" src="img/demo/step-5.webp" width="603" height="1218" alt="" loading="lazy" decoding="async">
+              <img class="demo-frame" src="img/demo/step-6.webp" width="603" height="1218" alt="" loading="lazy" decoding="async">
+                <span class="demo-touch" id="demo-touch"></span>
+              </div>
+              <span class="iphone__home"></span>
+            </div>
+          </div>
+          <figcaption class="demo__caption" id="demo-caption" aria-hidden="true"></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="band" id="ways" aria-labelledby="how-title">
       <h2 class="band__title" id="how-title">Three ways to search</h2>
       <ul class="features features--3">
         <li class="feature">

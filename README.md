@@ -68,7 +68,7 @@ Businesses with no coordinates stay in the list, marked "No map location", and d
 public/                   Everything the browser can load (Vercel output directory)
   index.html              App page (search, map, list, settings dialog)
   about.html              About / landing page: what FoodCheck does, ratings explained, install, FAQ
-  img/app-phone.jpg       App screenshot used on the About page
+  img/demo/               Screenshots for the About page's animated iPhone walkthrough
   history.html            Search history page
   privacy.html            Privacy policy
   terms.html              Terms of use
@@ -78,6 +78,7 @@ public/                   Everything the browser can load (Vercel output directo
   js/app.js               UI controller: search, map, list, selection, states
   js/api.js               postcodes.io + FSA API calls, proxy fallback
   js/ratings.js           Rating → colour / label / description, filter options
+  js/about-demo.js        About page: animated "how it works" walkthrough on an iPhone
   js/history.js           Search history storage (localStorage, validated on read)
   js/history-page.js      History page: grouped by day, re-run, remove, clear, on/off
   js/settings.js          Settings dialog: light / dark / match device, clear saved data
