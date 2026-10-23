@@ -731,6 +731,43 @@ a.btn { text-decoration: none; }
 .footer a { color: var(--ink-2); }
 .footer__note { margin-top: 8px; }
 
+/* ---------- Back to top (phones and tablets) ---------- */
+
+.to-top {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 6px 20px rgb(20 20 19 / .18);
+  cursor: pointer;
+  touch-action: manipulation;
+  /* Hidden until scrolled; visibility also takes it out of the tab order */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity .2s, transform .2s, visibility 0s linear .2s;
+}
+.to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity .2s, transform .2s, visibility 0s;
+}
+.to-top svg { width: 22px; height: 22px; }
+.to-top:hover { border-color: var(--ink-3); }
+.to-top:active { transform: scale(.94); }
+@media (min-width: 960px) { .to-top { display: none; } }
+.map-fullscreen .to-top { display: none; }
+
 /* ---------- Footer links ---------- */
 
 .footer__links {
