@@ -2,7 +2,7 @@
 
 Find food hygiene ratings near any UK postcode, on a map and in a list.
 
-Enter a postcode, or use your location, to see nearby restaurants, takeaways, shops and other food businesses. Each one is colour-coded by its latest Food Standards Agency (FSA) inspection result, and the number or text is always shown too.
+Enter a postcode, use your location, or press and hold anywhere on the map (right-click on desktop) to see nearby restaurants, takeaways, shops and other food businesses. Each one is colour-coded by its latest Food Standards Agency (FSA) inspection result, and the number or text is always shown too.
 
 - **England, Wales and Northern Ireland** use the 0–5 Food Hygiene Rating Scheme.
 - **Scotland** uses the Food Hygiene Information Scheme: *Pass* or *Improvement Required*.
@@ -40,7 +40,7 @@ The browser calls the FSA API directly; it allows cross-origin requests. `/api/f
 | Step | Source |
 | --- | --- |
 | Postcode → coordinates | `GET https://api.postcodes.io/postcodes/{postcode}` (404 means invalid) |
-| Device location → nearest postcode | `GET https://api.postcodes.io/postcodes?lat=…&lon=…` |
+| Device location or a point held on the map → nearest postcode | `GET https://api.postcodes.io/postcodes?lat=…&lon=…` |
 | Nearby businesses | `GET https://api.ratings.food.gov.uk/Establishments?latitude=…&longitude=…&maxDistanceLimit=…&sortOptionKey=distance&pageSize=100` |
 | Business type filter | `GET https://api.ratings.food.gov.uk/BusinessTypes` (cached in `localStorage` for a week) |
 

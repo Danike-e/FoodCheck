@@ -53,7 +53,8 @@ const state = {
 /* ---------- Map ---------- */
 
 const UK_CENTRE = [54.3, -2.6];
-const map = L.map('map', { zoomControl: true, scrollWheelZoom: true, tap: false }).setView(UK_CENTRE, 5);
+// Leaflet's tapHold (default on iOS Safari) turns a long press into 'contextmenu'; Android does that natively.
+const map = L.map('map', { zoomControl: true, scrollWheelZoom: true }).setView(UK_CENTRE, 5);
 map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
@@ -296,7 +297,7 @@ function setStatus(kind, opts = {}) {
     els.list.innerHTML = '';
     els.status.innerHTML = `
       <h3 class="status__title">Check before you eat</h3>
-      <p>Enter a postcode to see how nearby restaurants, takeaways, cafés and shops did at their last food hygiene inspection.</p>
+      <p>Enter a postcode, or press and hold anywhere on the map, to see how nearby restaurants, takeaways, cafés and shops did at their last food hygiene inspection.</p>
       <p class="status__try">Try
         <button type="button" class="chip" data-postcode="G3 7TF">G3 7TF</button>
         <button type="button" class="chip" data-postcode="SW1A 1AA">SW1A 1AA</button>
@@ -379,9 +380,15 @@ function readFiltersFromUi() {
 
 function syncUrl() {
   const params = new URLSearchParams();
-  if (state.origin?.postcode && !state.origin.fromDevice) params.set('pc', compactPostcode(state.origin.postcode));
-  // Device locations go in the URL rounded to ~100 m, so a shared link doesn't reveal an exact position.
-  else if (state.origin) { params.set('lat', state.origin.lat.toFixed(3)); params.set('lng', state.origin.lng.toFixed(3)); }
+  const { origin } = state;
+  if (origin?.source === 'postcode') params.set('pc', compactPostcode(origin.postcode));
+  else if (origin) {
+    // Device locations go in the URL rounded to ~100 m, so a shared link doesn't reveal an exact position.
+    // Points picked on the map aren't private, so keep them to ~10 m.
+    const dp = origin.source === 'device' ? 3 : 4;
+    params.set('lat', origin.lat.toFixed(dp));
+    params.set('lng', origin.lng.toFixed(dp));
+  }
   if (state.filters.radius !== 1) params.set('r', state.filters.radius);
   if (state.filters.rating) params.set('rating', state.filters.rating);
   if (state.filters.businessType) params.set('type', state.filters.businessType);
@@ -500,7 +507,7 @@ async function searchPostcode(raw) {
   setStatus('loading', { message: `Looking up ${formatPostcode(value)}…` });
   try {
     const place = await lookupPostcode(value, { signal });
-    state.origin = { ...place, label: place.postcode };
+    state.origin = { ...place, source: 'postcode', label: place.postcode };
     setScheme(place.country === 'Scotland' ? 'fhis' : 'fhrs');
     revealResultsOnMobile();
     await loadEstablishments();
@@ -522,25 +529,78 @@ function showInputError(message) {
   els.input.setAttribute('aria-invalid', message ? 'true' : 'false');
 }
 
-async function searchByCoords(lat, lng) {
+/**
+ * Search around a coordinate.
+ * @param {'device'|'map'} source  where the point came from (affects wording and URL precision)
+ */
+async function searchByCoords(lat, lng, source = 'device') {
   const signal = startRequest();
+  showInputError('');
   setStatus('loading', { message: 'Finding the nearest postcode…' });
   try {
     const near = await reverseGeocode(lat, lng, { signal });
+    const what = source === 'map' ? 'the point you picked' : 'your location';
     state.origin = {
       lat, lng,
-      fromDevice: true,
+      source,
       postcode: near?.postcode || null,
       country: near?.country || null,
-      label: near ? `your location (near ${near.postcode})` : 'your location',
+      label: near ? `${what} (near ${near.postcode})` : what,
     };
-    if (near) els.input.value = near.postcode;
+    els.input.value = near ? near.postcode : '';
     setScheme(near?.country === 'Scotland' ? 'fhis' : 'fhrs');
-    revealResultsOnMobile();
+    if (source === 'device') revealResultsOnMobile(); // a map pick: the map is already on screen
     await loadEstablishments();
   } catch (err) {
-    handleError(err, () => searchByCoords(lat, lng));
+    handleError(err, () => searchByCoords(lat, lng, source));
   }
+}
+
+const inUk = (lat, lng) => lat >= 49.5 && lat <= 61 && lng >= -8.8 && lng <= 2.1;
+
+/* ---------- Press and hold (or right-click) the map to search there ---------- */
+
+let lastPick = 0;
+map.on('contextmenu', (e) => {
+  // Some Android browsers fire both a native and Leaflet's emulated event for one press.
+  if (Date.now() - lastPick < 800) return;
+  lastPick = Date.now();
+
+  const { lat, lng } = e.latlng;
+  if (!inUk(lat, lng)) {
+    handleError(new AppError('location', 'FoodCheck only covers the UK. Press and hold somewhere in the UK instead.'));
+    return;
+  }
+  navigator.vibrate?.(12); // a small tap of feedback where supported (Android)
+  dismissMapHint();
+  searchByCoords(lat, lng, 'map');
+});
+
+/** One-off hint telling people they can press and hold the map. */
+const HINT_KEY = 'foodcheck:mapHintSeen';
+let mapHint = null;
+
+function showMapHint() {
+  try { if (localStorage.getItem(HINT_KEY)) return; } catch { /* storage blocked: still show it */ }
+  const touch = window.matchMedia('(pointer: coarse)').matches;
+  const Hint = L.Control.extend({
+    options: { position: 'bottomleft' },
+    onAdd() {
+      const el = L.DomUtil.create('div', 'map-hint');
+      el.setAttribute('role', 'note');
+      el.textContent = touch ? 'Press and hold the map to search there' : 'Right-click the map to search there';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    },
+  });
+  mapHint = new Hint().addTo(map);
+}
+
+function dismissMapHint() {
+  if (!mapHint) return;
+  mapHint.remove();
+  mapHint = null;
+  try { localStorage.setItem(HINT_KEY, '1'); } catch { /* ignore */ }
 }
 
 function useMyLocation() {
@@ -654,6 +714,7 @@ function restoreFromUrl() {
 }
 
 async function init() {
+  showMapHint();
   const params = restoreFromUrl();
   // Scottish filter values are words ("Pass"), FHRS ones are digits.
   setScheme(/^[a-z]/i.test(state.filters.rating) ? 'fhis' : 'fhrs');
@@ -661,14 +722,13 @@ async function init() {
 
   const lat = parseFloat(params.get('lat'));
   const lng = parseFloat(params.get('lng'));
-  const inUk = lat >= 49.5 && lat <= 61 && lng >= -8.8 && lng <= 2.1;
   if (params.get('pc')) {
     els.input.value = formatPostcode(params.get('pc'));
     await types; // so a restored business-type filter is selectable
     searchPostcode(params.get('pc'));
-  } else if (inUk) {
+  } else if (inUk(lat, lng)) {
     await types;
-    searchByCoords(lat, lng);
+    searchByCoords(lat, lng, 'map'); // a shared link: treat it as a picked point, not the viewer's location
   } else {
     setStatus('intro');
   }
