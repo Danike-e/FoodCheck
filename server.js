@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
- * FoodCheck local server – no dependencies, Node 18+.
+ * FoodCheck local dev server – no dependencies, Node 18+.
+ * (Production runs on Vercel: static files from public/, proxy in api/fsa.js.)
  *
- *  - Serves the static site from this folder.
- *  - Proxies /api/fsa/<Establishments|BusinessTypes>?… to the Food Standards
- *    Agency API, adding the required headers and caching responses in memory
- *    for an hour. The front end only uses this if calling the FSA API directly
- *    from the browser fails (e.g. CORS).
+ *  - Serves the static site from ./public with the same security headers
+ *    as production.
+ *  - Serves /api/fsa/<Establishments|BusinessTypes>?… through the shared,
+ *    validated proxy in lib/fsa-proxy.js, caching successes in memory for
+ *    an hour.
  *
  * Usage: node server.js   (PORT env var to change the port, default 3000)
  */
@@ -15,14 +16,15 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { handleFsaRequest, buildUpstreamUrl } from './lib/fsa-proxy.js';
+import { SECURITY_HEADERS } from './lib/security-headers.js';
 
-const ROOT = fileURLToPath(new URL('.', import.meta.url));
+const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || '127.0.0.1'; // local only unless you opt in
 
-const FSA_API = 'https://api.ratings.food.gov.uk';
-const FSA_ALLOWED = new Set(['establishments', 'businesstypes']);
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-const CACHE_MAX_ENTRIES = 500;
+const CACHE_MAX_ENTRIES = 200;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -32,84 +34,85 @@ const MIME = {
   '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
-  '.ico': 'image/x-icon',
+  '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
-  '.md': 'text/plain; charset=utf-8',
 };
 
-/** url -> { expires, status, body } */
+/** upstream URL -> { expires, response } */
 const cache = new Map();
 
-async function proxyFsa(req, res, url) {
-  const endpoint = url.pathname.replace(/^\/api\/fsa\//, '');
-  if (!FSA_ALLOWED.has(endpoint.toLowerCase())) {
-    return send(res, 404, JSON.stringify({ error: 'Unknown endpoint' }), MIME['.json']);
-  }
-
-  const target = `${FSA_API}/${endpoint}${url.search}`;
-  const hit = cache.get(target);
+async function proxyFsa(res, url) {
+  const endpoint = url.pathname.slice('/api/fsa/'.length);
+  const key = buildUpstreamUrl(endpoint, url.searchParams);
+  const hit = key && cache.get(key);
   if (hit && hit.expires > Date.now()) {
-    return send(res, hit.status, hit.body, MIME['.json'], { 'x-cache': 'HIT' });
+    return send(res, hit.response.status, hit.response.body, { ...hit.response.headers, 'x-cache': 'HIT' });
   }
 
-  try {
-    const upstream = await fetch(target, {
-      headers: { 'x-api-version': '2', accept: 'application/json' },
-      signal: AbortSignal.timeout(15000),
-    });
-    const body = await upstream.text();
-    if (upstream.ok) {
-      if (cache.size >= CACHE_MAX_ENTRIES) cache.delete(cache.keys().next().value); // drop oldest
-      cache.set(target, { expires: Date.now() + CACHE_TTL_MS, status: upstream.status, body });
-    }
-    send(res, upstream.status, body, MIME['.json'], { 'x-cache': 'MISS' });
-  } catch (err) {
-    console.error('FSA proxy error:', err.message);
-    send(res, 502, JSON.stringify({ error: 'Upstream request failed' }), MIME['.json']);
+  const response = await handleFsaRequest(endpoint, url.searchParams);
+  if (response.status === 200) {
+    if (cache.size >= CACHE_MAX_ENTRIES) cache.delete(cache.keys().next().value); // drop oldest
+    cache.set(key, { expires: Date.now() + CACHE_TTL_MS, response });
   }
+  send(res, response.status, response.body, { ...response.headers, 'x-cache': 'MISS' });
 }
 
 async function serveStatic(res, url) {
-  let pathname = decodeURIComponent(url.pathname);
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.pathname);
+  } catch {
+    return notFound(res); // malformed %-encoding
+  }
+  if (pathname.includes('\0')) return notFound(res);
   if (pathname.endsWith('/')) pathname += 'index.html';
 
-  // Resolve inside ROOT only, and never serve dotfiles or server code.
-  const file = normalize(join(ROOT, pathname));
-  if (!file.startsWith(ROOT) || file.split(sep).some((part) => part.startsWith('.')) || file.endsWith(`${sep}server.js`)) {
-    return send(res, 404, 'Not found', MIME['.txt']);
+  // Resolve inside public/ only, and never serve dotfiles.
+  const file = normalize(join(PUBLIC_DIR, pathname));
+  if (!file.startsWith(PUBLIC_DIR) || file.slice(PUBLIC_DIR.length).split(sep).some((part) => part.startsWith('.'))) {
+    return notFound(res);
   }
 
+  let info;
   try {
-    const info = await stat(file);
-    if (!info.isFile()) return send(res, 404, 'Not found', MIME['.txt']);
-    const body = await readFile(file);
-    const type = MIME[extname(file)] || 'application/octet-stream';
-    // The service worker must always be revalidated so updates roll out.
-    const cacheControl = file.endsWith('sw.js') ? 'no-cache' : 'public, max-age=300';
-    send(res, 200, body, type, { 'cache-control': cacheControl });
+    info = await stat(file);
   } catch {
-    send(res, 404, 'Not found', MIME['.txt']);
+    return notFound(res);
   }
+  if (!info.isFile()) return notFound(res);
+
+  const type = MIME[extname(file)];
+  if (!type) return notFound(res); // only serve known file types
+  const body = await readFile(file);
+  const cacheControl = file.endsWith(`${sep}sw.js`) ? 'no-cache' : 'public, max-age=300';
+  send(res, 200, body, { 'content-type': type, 'cache-control': cacheControl });
 }
 
-function send(res, status, body, type, headers = {}) {
-  res.writeHead(status, {
-    'content-type': type,
-    'x-content-type-options': 'nosniff',
-    ...headers,
-  });
-  res.end(body);
+function notFound(res) {
+  send(res, 404, 'Not found', { 'content-type': MIME['.txt'] });
 }
 
-const server = createServer((req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    return send(res, 405, 'Method not allowed', MIME['.txt']);
+function send(res, status, body, headers = {}) {
+  if (res.headersSent) return;
+  res.writeHead(status, { ...SECURITY_HEADERS, ...headers });
+  res.end(res.req.method === 'HEAD' ? undefined : body);
+}
+
+const server = createServer(async (req, res) => {
+  try {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return send(res, 405, 'Method not allowed', { 'content-type': MIME['.txt'], allow: 'GET, HEAD' });
+    }
+    const url = new URL(req.url, 'http://localhost');
+    if (url.pathname.startsWith('/api/fsa/')) return await proxyFsa(res, url);
+    return await serveStatic(res, url);
+  } catch (err) {
+    // Never let one bad request take the server down.
+    console.error('Request failed:', err);
+    send(res, 500, 'Internal error', { 'content-type': MIME['.txt'] });
   }
-  if (url.pathname.startsWith('/api/fsa/')) return proxyFsa(req, res, url);
-  return serveStatic(res, url);
 });
 
-server.listen(PORT, () => {
-  console.log(`FoodCheck running at http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`FoodCheck running at http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
 });

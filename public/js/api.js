@@ -129,8 +129,9 @@ async function fsaGet(path, params = {}, { signal } = {}) {
  */
 export async function fetchEstablishments({ lat, lng, radius, rating, businessType, page = 1 }, opts) {
   const data = await fsaGet('Establishments', {
-    latitude: lat,
-    longitude: lng,
+    // 6 dp is ~10 cm: plenty, and keeps URLs (and cache keys) short.
+    latitude: Number(lat).toFixed(6),
+    longitude: Number(lng).toFixed(6),
     maxDistanceLimit: radius,
     sortOptionKey: 'distance',
     pageSize: 100,

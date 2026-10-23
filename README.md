@@ -7,28 +7,33 @@ Enter a postcode, or use your location, to see nearby restaurants, takeaways, sh
 - **England, Wales and Northern Ireland** use the 0–5 Food Hygiene Rating Scheme.
 - **Scotland** uses the Food Hygiene Information Scheme: *Pass* or *Improvement Required*.
 
-The site is plain HTML, CSS and JavaScript with no build step. It installs as a PWA on iOS, Android and desktop.
+The site is plain HTML, CSS and JavaScript with no build step and no runtime dependencies. It installs as a PWA on iOS, Android and desktop, and deploys to Vercel as static files plus one small serverless function.
 
 ## Run it locally
 
-You need [Node.js](https://nodejs.org/) 18 or newer. There are no dependencies to install.
+You need [Node.js](https://nodejs.org/) 20 or newer. There are no dependencies to install.
 
 ```bash
-npm start            # or: node server.js
+npm start            # dev server on http://localhost:3000 (PORT=8080 to change)
+npm test             # security test suite
 ```
 
-Then open <http://localhost:3000>. Set `PORT=8080` to use a different port.
+The dev server listens on `127.0.0.1` only. Set `HOST=0.0.0.0` to try it from a phone on your network. It sends the same security headers as production.
 
-Any static file server works too, for example `python3 -m http.server`. The FSA API currently allows browser requests, so the proxy below is optional. Opening `index.html` straight from disk (`file://`) won't work, because ES modules and the service worker need an HTTP origin.
+## Deploy to Vercel
 
-### Why there's a small server
+1. Import the repo in Vercel. No framework preset, build command or install step is needed; `vercel.json` sets all of it.
+2. Deploy. Vercel serves `public/` as static files and turns `api/fsa.js` into a serverless function.
 
-`server.js` does two things, and neither needs any packages:
+There are no environment variables or secrets: both data APIs are free and keyless.
 
-1. It serves the static files.
-2. It runs a cached proxy at `/api/fsa/Establishments` and `/api/fsa/BusinessTypes`. The proxy adds the required `x-api-version: 2` header and keeps responses in memory for an hour.
+### Why plain static files and not Next.js or Bun
 
-The browser calls the FSA API directly first. It only switches to the proxy if that request fails at the network level, for example if the FSA ever stops allowing cross-origin requests.
+FoodCheck is a single client-side page with nothing to render on a server. Next.js would add hundreds of transitive packages, each one a supply-chain and patching burden, for no user-facing gain. Recent Next.js CVEs include a middleware auth bypass and a React Server Components remote code execution bug. Bun isn't needed either, since nothing gets built. With no runtime dependencies there is nothing to `npm audit` and nothing to keep patched.
+
+### The proxy
+
+The browser calls the FSA API directly; it allows cross-origin requests. `/api/fsa/Establishments` and `/api/fsa/BusinessTypes` are a fallback the app switches to only if a direct request fails at the network level. The proxy adds the required `x-api-version: 2` header. Successful responses carry `s-maxage=3600`, so Vercel's CDN caches them for an hour and repeat searches never invoke the function. The local server caches in memory instead. Both use the same code in `lib/fsa-proxy.js`.
 
 ## How it works
 
@@ -51,21 +56,49 @@ Businesses with no coordinates stay in the list, marked "No map location", and d
 ## Project structure
 
 ```
-index.html              Page markup
-css/styles.css          All styles (light + dark, mobile first)
-js/app.js               UI controller: search, map, list, selection, states
-js/api.js               postcodes.io + FSA API calls, proxy fallback
-js/ratings.js           Rating → colour / label / description, filter options
-sw.js                   Service worker (offline app shell, last results offline)
-manifest.webmanifest    PWA manifest
-icons/                  App icons (SVG + PNG, maskable, apple-touch)
-vendor/leaflet/         Leaflet 1.9.4 (bundled so the app works offline)
-server.js               Optional static server + cached FSA proxy
+public/                   Everything the browser can load (Vercel output directory)
+  index.html              Page markup
+  css/styles.css          All styles (light + dark, mobile first)
+  css/fonts.css           Self-hosted font faces
+  js/app.js               UI controller: search, map, list, selection, states
+  js/api.js               postcodes.io + FSA API calls, proxy fallback
+  js/ratings.js           Rating → colour / label / description, filter options
+  sw.js                   Service worker (offline app shell, recent results offline)
+  manifest.webmanifest    PWA manifest
+  icons/                  App icons (SVG + PNG, maskable, apple-touch)
+  vendor/leaflet/         Leaflet 1.9.4 (BSD-2-Clause)
+  vendor/fonts/           DM Sans + Source Serif 4 variable fonts (OFL)
+api/fsa.js                Vercel Function: FSA proxy fallback
+lib/fsa-proxy.js          Proxy validation + upstream call (shared)
+lib/security-headers.js   CSP and other headers (mirrored in vercel.json)
+server.js                 Local dev server
+vercel.json               Vercel config: output dir, rewrite, headers
+test/security.test.js     Security tests (node:test, no network needed)
 ```
+
+## Security
+
+| Area | What's in place |
+| --- | --- |
+| **XSS** | Every API-supplied string is HTML-escaped before rendering. Other template values come from fixed lookup tables. URL parameters are checked against allow-lists before use. Tested by feeding script-laden business names, addresses and IDs through a mocked API. |
+| **Content Security Policy** | `script-src 'self'` with no `unsafe-inline` or `unsafe-eval`, and no inline scripts or styles anywhere. Only the two data APIs and the OSM tile server are allowed. `object-src`, framing and `<base>` hijacking are blocked. |
+| **Other headers** | HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` (location only for this site; camera, mic and payment off), COOP and CORP. |
+| **Proxy abuse** | Only two endpoints are reachable. Every parameter is type- and range-checked: UK-only coordinates, radius 1/2/5, page size ≤ 100, page ≤ 50. Unknown or duplicated parameters are rejected, and the upstream URL is rebuilt from the parsed values. Responses must be JSON under 2 MB, and redirects are refused. Errors are generic. Invalid requests never reach the FSA. |
+| **Third parties** | No CDNs, analytics or Google Fonts. Leaflet and the fonts are self-hosted, so the only outside requests go to postcodes.io, the FSA and OpenStreetMap tiles. |
+| **Privacy** | Your location is used once, in the browser, to find the nearest postcode. When it ends up in the URL (so results can be shared), it is rounded to about 100 m. Nothing is stored server-side, and there are no cookies. |
+| **Links** | External links use `rel="noopener noreferrer"`. |
+| **Dev server** | Serves only `public/`, never dotfiles. It survives malformed URLs (the first version crashed on one), listens on localhost by default, and accepts only GET and HEAD. |
+| **Dependencies** | None at runtime, and none at build time. |
+
+Optional hardening on Vercel:
+- Add a rate-limit rule for `/api/fsa/*` in the Vercel Firewall.
+- Once you're on a custom domain you control fully, add `includeSubDomains; preload` to HSTS.
+
+
 
 ## Design notes
 
-- The palette is warm paper and clay, with a serif display face (Source Serif 4) paired with DM Sans. Claude's own typefaces are proprietary, so these are close free alternatives loaded from Google Fonts.
+- The palette is warm paper and clay, with a serif display face (Source Serif 4) paired with DM Sans. Claude's own typefaces are proprietary, so these are close free alternatives, self-hosted.
 - Rating colours were chosen so the text on each badge meets WCAG AA contrast. Colour is never the only signal: badges and pins always show the number, ✓ / ! or text, and each card spells out what the rating means ("Generally satisfactory").
 - On phones the map sits above the list and stays pinned while you scroll, so tapping a card always shows its pin. From 960px wide, the sidebar holds search and results and the map fills the rest of the screen.
 - The input is 17px so iOS doesn't zoom on focus. The layout respects safe areas (`viewport-fit=cover`), and dark mode and reduced motion are supported.
@@ -73,10 +106,12 @@ server.js               Optional static server + cached FSA proxy
 
 ## Testing
 
-Try `G3 7TF` (Glasgow), `SW1A 1AA` (London) and `EH1 1YZ` (Edinburgh). The two Scottish postcodes use Pass / Improvement Required instead of 0–5.
+`npm test` runs the security suite: proxy validation, upstream error handling, header config and dev-server hardening.
+
+For a manual check, try `G3 7TF` (Glasgow), `SW1A 1AA` (London) and `EH1 1YZ` (Edinburgh). The two Scottish postcodes use Pass / Improvement Required instead of 0–5.
 
 ## Attribution
 
-Contains public sector information licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). Data from the [Food Standards Agency](https://ratings.food.gov.uk/). Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. Postcode data from [postcodes.io](https://postcodes.io/). Maps by [Leaflet](https://leafletjs.com/) (BSD-2-Clause).
+Contains public sector information licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). Data from the [Food Standards Agency](https://ratings.food.gov.uk/). Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. Postcode data from [postcodes.io](https://postcodes.io/). Maps by [Leaflet](https://leafletjs.com/) (BSD-2-Clause). Fonts: DM Sans and Source Serif 4 (SIL Open Font License 1.1).
 
 FoodCheck is an independent tool and isn't affiliated with the Food Standards Agency.

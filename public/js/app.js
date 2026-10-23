@@ -380,7 +380,8 @@ function readFiltersFromUi() {
 function syncUrl() {
   const params = new URLSearchParams();
   if (state.origin?.postcode && !state.origin.fromDevice) params.set('pc', compactPostcode(state.origin.postcode));
-  else if (state.origin) { params.set('lat', state.origin.lat.toFixed(5)); params.set('lng', state.origin.lng.toFixed(5)); }
+  // Device locations go in the URL rounded to ~100 m, so a shared link doesn't reveal an exact position.
+  else if (state.origin) { params.set('lat', state.origin.lat.toFixed(3)); params.set('lng', state.origin.lng.toFixed(3)); }
   if (state.filters.radius !== 1) params.set('r', state.filters.radius);
   if (state.filters.rating) params.set('rating', state.filters.rating);
   if (state.filters.businessType) params.set('type', state.filters.businessType);
@@ -643,8 +644,12 @@ function restoreFromUrl() {
     state.filters.radius = radius;
     document.getElementById(`r${radius}`).checked = true;
   }
-  state.filters.rating = params.get('rating') || '';
-  state.filters.businessType = params.get('type') || '';
+  // Only accept values the UI could have produced; ignore anything else.
+  const rating = params.get('rating') || '';
+  const knownRatings = [...RATING_FILTERS.fhrs, ...RATING_FILTERS.fhis].map((o) => o.value);
+  state.filters.rating = knownRatings.includes(rating) ? rating : '';
+  const type = params.get('type') || '';
+  state.filters.businessType = /^\d{1,6}$/.test(type) ? type : '';
   return params;
 }
 
@@ -656,11 +661,12 @@ async function init() {
 
   const lat = parseFloat(params.get('lat'));
   const lng = parseFloat(params.get('lng'));
+  const inUk = lat >= 49.5 && lat <= 61 && lng >= -8.8 && lng <= 2.1;
   if (params.get('pc')) {
     els.input.value = formatPostcode(params.get('pc'));
     await types; // so a restored business-type filter is selectable
     searchPostcode(params.get('pc'));
-  } else if (Number.isFinite(lat) && Number.isFinite(lng)) {
+  } else if (inUk) {
     await types;
     searchByCoords(lat, lng);
   } else {
