@@ -78,6 +78,7 @@ public/                   Everything the browser can load (Vercel output directo
   js/app.js               UI controller: search, map, list, selection, states
   js/api.js               postcodes.io + FSA API calls, proxy fallback
   js/ratings.js           Rating → colour / label / description, filter options
+  js/share.js             Share panel: QR code (made on the device), copy link, device share sheet, Messages/WhatsApp/Email/Facebook/X, QR PNG download
   js/section-nav.js       “Where am I” indicator: section pill with progress ring + jump menu; “On this page” sidebar on wide text pages
   js/back-to-top.js       Floating “back to top” button on phones and tablets (all pages)
   js/about-demo.js        About page: animated "how it works" walkthrough on an iPhone
@@ -89,6 +90,7 @@ public/                   Everything the browser can load (Vercel output directo
   manifest.webmanifest    PWA manifest
   icons/                  App icons (SVG + PNG, maskable, apple-touch)
   vendor/leaflet/         Leaflet 1.9.4 (BSD-2-Clause)
+  vendor/qrcode/          qrcode-generator 1.4.4 (MIT), loaded only when a share panel opens
   vendor/fonts/           DM Sans + Source Serif 4 variable fonts (OFL)
 api/fsa.js                Vercel Function: FSA proxy fallback
 lib/fsa-proxy.js          Proxy validation + upstream call (shared)

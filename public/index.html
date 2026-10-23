@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <script type="module" src="js/back-to-top.js"></script>
   <script type="module" src="js/section-nav.js"></script>
+  <script type="module" src="js/share.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#results-heading">Skip to results</a>
@@ -116,7 +117,13 @@
 
   <main class="list-pane" id="results" data-section="Results">
       <div class="list-pane__head">
-        <h2 class="list-pane__title" id="results-heading" tabindex="-1">Nearby ratings</h2>
+        <div class="list-pane__titlebar">
+          <h2 class="list-pane__title" id="results-heading" tabindex="-1">Nearby ratings</h2>
+          <button type="button" class="icon-btn" id="share-results" hidden>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v10M6 6l4-3.5L14 6M4.5 9.5v6.5h11V9.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Share<span class="visually-hidden"> these results</span></span>
+          </button>
+        </div>
         <p class="list-pane__summary" id="summary" aria-live="polite"></p>
         <ul class="legend" id="legend" aria-label="Rating key"></ul>
       </div>
@@ -134,6 +141,7 @@
           <li><a href="terms.html">Terms of use</a></li>
           <li><a href="accessibility.html">Accessibility</a></li>
           <li><button type="button" data-open-settings aria-haspopup="dialog" aria-controls="settings">Settings</button></li>
+          <li><button type="button" data-share-app aria-haspopup="dialog">Share FoodCheck</button></li>
         </ul>
         <p>Contains public sector information licensed under the
           <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener noreferrer" target="_blank">Open Government Licence v3.0</a>.

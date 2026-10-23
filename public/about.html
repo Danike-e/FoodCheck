@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <script type="module" src="js/back-to-top.js"></script>
   <script type="module" src="js/section-nav.js"></script>
+  <script type="module" src="js/share.js"></script>
   <script type="module" src="js/about-demo.js"></script>
 </head>
 <body class="doc-page landing-page">
@@ -253,7 +254,10 @@
     <section class="cta" id="start" aria-labelledby="cta-title" data-section="Get started">
       <h2 class="cta__title" id="cta-title">Check somewhere now</h2>
       <p>Type a postcode or use your location. Results take a couple of seconds.</p>
-      <a class="btn btn--primary" href="./">Open FoodCheck</a>
+      <div class="cta__actions">
+        <a class="btn btn--primary" href="./">Open FoodCheck</a>
+        <button type="button" class="btn btn--outline" data-share-app aria-haspopup="dialog"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v10M6 6l4-3.5L14 6M4.5 9.5v6.5h11V9.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Share with a friend</button>
+      </div>
     </section>
   </main>
 
@@ -267,6 +271,7 @@
           <li><a href="privacy.html">Privacy</a></li>
           <li><a href="terms.html">Terms of use</a></li>
           <li><a href="accessibility.html">Accessibility</a></li>
+          <li><button type="button" data-share-app aria-haspopup="dialog">Share FoodCheck</button></li>
         </ul>
       </nav>
       <p>Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener noreferrer" target="_blank">Open Government Licence v3.0</a>. Data from the <a href="https://ratings.food.gov.uk/" rel="noopener noreferrer" target="_blank">Food Standards Agency</a>. Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer" target="_blank">OpenStreetMap</a> contributors.</p>

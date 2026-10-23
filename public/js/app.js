@@ -16,6 +16,7 @@ import {
 import { initSettings } from './settings.js';
 import { pageWindow } from './pager.js';
 import { addToHistory, getHistory, historyUrl, describeEntry } from './history.js';
+import { openShare } from './share.js';
 
 /* ---------- DOM ---------- */
 
@@ -35,6 +36,7 @@ const els = {
   pager: $('#pager'),
   heading: $('#results-heading'),
   recent: $('#recent'),
+  shareResults: $('#share-results'),
   mapLoading: $('#map-loading'),
 };
 
@@ -235,7 +237,10 @@ function placeHtml(p) {
       ${p.address ? `<p class="place__address">${escapeHtml(p.address)}</p>` : ''}
       <p class="place__foot">
         <span>${p.date ? `Inspected ${escapeHtml(p.date)}` : 'No inspection date'}</span>
-        ${link}
+        <span class="place__actions">
+          <button type="button" class="place__share" data-share-id="${escapeHtml(p.id)}" aria-haspopup="dialog">Share<span class="visually-hidden"> ${escapeHtml(p.name)}</span></button>
+          ${link}
+        </span>
       </p>
       ${p.coords ? '' : '<p class="place__nomap-note">No map location for this business</p>'}
     </div>
@@ -285,6 +290,7 @@ function renderResults({ fit = true } = {}) {
 
   renderLegend();
   renderPager();
+  els.shareResults.hidden = false;
 
   if (fit) fitToResults();
   if (state.selectedId && !results.some((r) => r.id === state.selectedId)) state.selectedId = null;
@@ -340,6 +346,7 @@ function showOrigin() {
 
 /** Status panel: one of intro / loading / error / empty / nothing. */
 function setStatus(kind, opts = {}) {
+  if (kind !== 'none') els.shareResults.hidden = true;
   els.mapLoading.hidden = kind !== 'loading';
   els.status.className = `status status--${kind}`;
 
@@ -402,6 +409,41 @@ function setStatus(kind, opts = {}) {
 
   els.status.innerHTML = '';
 }
+
+/* ---------- Sharing ---------- */
+
+const milesText = (r) => (r === 1 ? '1 mile' : `${r} miles`);
+
+/** Share the current search (the URL already holds postcode or point, filters and page). */
+function shareResults() {
+  const { origin, filters, total } = state;
+  const place = origin.postcode && origin.source === 'postcode' ? origin.postcode : origin.label;
+  openShare({
+    heading: 'Share these results',
+    title: `Food hygiene ratings near ${place}`,
+    text: `${total.toLocaleString('en-GB')} food hygiene ratings within ${milesText(filters.radius)} of ${place}, on FoodCheck.`,
+    url: location.href,
+    note: origin.source === 'device'
+      ? 'This link includes your approximate location (to about 100 metres).'
+      : '',
+  });
+}
+
+/** Share one business: its official FSA record when there is one, otherwise this search. */
+function sharePlace(id) {
+  const p = state.results.find((r) => r.id === id);
+  if (!p) return;
+  const r = p.rating;
+  const rating = r.numeric != null ? `${r.label} out of 5 (${r.description})` : `${r.label} (${r.description})`;
+  openShare({
+    heading: 'Share this place',
+    title: `${p.name}: food hygiene rating`,
+    text: `${p.name} has a food hygiene rating of ${rating}${p.date ? `, inspected ${p.date}` : ''}.`,
+    url: p.fhrsId ? `https://ratings.food.gov.uk/business/${encodeURIComponent(p.fhrsId)}` : location.href,
+  });
+}
+
+els.shareResults.addEventListener('click', shareResults);
 
 /* ---------- Selection (list <-> map) ---------- */
 
@@ -802,6 +844,11 @@ els.pager.addEventListener('click', (e) => {
 // Clicking anywhere on a card (except its link) selects it; the name button covers keyboard users.
 els.list.addEventListener('click', (e) => {
   if (e.target.closest('a')) return;
+  const shareBtn = e.target.closest('.place__share');
+  if (shareBtn) {
+    sharePlace(shareBtn.dataset.shareId);
+    return;
+  }
   const item = e.target.closest('.place[data-id]');
   if (item && !item.classList.contains('place--skeleton')) select(item.dataset.id, 'list');
 });

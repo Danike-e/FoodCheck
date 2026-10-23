@@ -506,6 +506,8 @@ a.btn { text-decoration: none; }
   letter-spacing: -0.01em;
 }
 .list-pane__title:focus { outline: none; }
+.list-pane__titlebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.list-pane__titlebar .icon-btn[hidden] { display: none; }
 /* When paging, the heading is scrolled into view: keep it clear of the sticky map on phones */
 .list-pane__title { scroll-margin-top: calc(var(--map-h) + 16px); }
 @media (min-width: 960px) {
@@ -671,6 +673,20 @@ a.btn { text-decoration: none; }
   text-decoration: none;
 }
 .place__link svg { width: 11px; height: 11px; }
+.place__actions { display: inline-flex; align-items: center; gap: 16px; }
+.place__share {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+.place__share:hover { color: var(--accent); text-decoration-color: currentColor; }
 .place__link:hover { text-decoration: underline; }
 .place__nomap-note {
   display: inline-block;
@@ -959,6 +975,84 @@ main h2, [data-section] { scroll-margin-top: 64px; }
   box-shadow: 0 0 0 3px var(--bg);
 }
 
+/* ---------- Share panel ---------- */
+
+.share { width: min(460px, calc(100vw - 24px)); }
+.share__subject { color: var(--ink-2); font-size: 15px; }
+.share__qr-wrap { margin: 16px 0 0; text-align: center; }
+.share__qr {
+  display: grid;
+  place-items: center;
+  width: min(220px, 62vw, 28dvh);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: 6px;
+  border-radius: 16px;
+  background: #fff;                 /* always light, so the code scans in dark mode too */
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / .08);
+}
+.share__qr svg { display: block; width: 100%; height: 100%; }
+.share__qr .spinner { width: 28px; height: 28px; }
+.share__qr-error { padding: 12px; font-size: 13.5px; color: #5E5D59; }
+.share__hint { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+.share__note {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.share__link { display: flex; margin-top: 16px; }
+.share__link input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-right-width: 0;
+  border-radius: 10px 0 0 10px;
+  background: var(--surface);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.share__link input:focus { outline: 2px solid var(--focus); outline-offset: -2px; }
+.share__copy { height: 44px; border-radius: 0 10px 10px 0; padding: 0 16px; border: 1px solid var(--accent); }
+.share__copy:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -5px; }
+.share__copy svg { width: 16px; height: 16px; }
+.share__status { min-height: 1.4em; margin-top: 6px; font-size: 13.5px; font-weight: 600; color: var(--r5-text); }
+.share__native { width: 100%; margin-top: 4px; }
+.share__native[hidden] { display: none; }
+.share__targets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.share__target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.share__target:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.share__target svg { width: 22px; height: 22px; }
+.share__target:not([href]) { opacity: .5; pointer-events: none; }
+
+.cta__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.cta__actions .btn svg { width: 18px; height: 18px; }
+
 /* ---------- Footer links ---------- */
 
 .footer__links {
@@ -990,6 +1084,8 @@ main h2, [data-section] { scroll-margin-top: 64px; }
 .dialog {
   width: min(440px, calc(100vw - 24px));
   max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 18px;
