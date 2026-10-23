@@ -11,7 +11,7 @@
  * Bump VERSION whenever shell files change.
  */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL_CACHE = `foodcheck-shell-${VERSION}`;
 const RUNTIME_CACHE = `foodcheck-runtime-${VERSION}`;
 const RUNTIME_MAX_ENTRIES = 60;
@@ -19,11 +19,16 @@ const RUNTIME_MAX_ENTRIES = 60;
 const SHELL = [
   './',
   './index.html',
+  './privacy.html',
+  './terms.html',
+  './accessibility.html',
   './css/fonts.css',
   './css/styles.css',
   './js/app.js',
   './js/api.js',
   './js/ratings.js',
+  './js/settings.js',
+  './js/theme-init.js',
   './vendor/leaflet/leaflet.css',
   './vendor/leaflet/leaflet.js',
   './vendor/fonts/dm-sans-latin-opsz-normal.woff2',
@@ -65,8 +70,10 @@ self.addEventListener('fetch', (event) => {
   if (isApi(url)) {
     event.respondWith(networkFirst(request));
   } else if (url.origin === self.location.origin) {
-    // Navigations (with any ?query) are served from the cached index.html.
-    const key = request.mode === 'navigate' ? './index.html' : request;
+    // The app page (with any ?query) is served from the cached index.html;
+    // other pages (privacy, terms, …) are cached under their own URL.
+    const isAppPage = request.mode === 'navigate' && /\/(index\.html)?$/.test(url.pathname);
+    const key = isAppPage ? './index.html' : request;
     event.respondWith(staleWhileRevalidate(request, key));
   }
 });
@@ -96,6 +103,7 @@ async function trimCache(cache) {
 async function staleWhileRevalidate(request, key) {
   const cache = await caches.open(SHELL_CACHE);
   const cached = await cache.match(key, { ignoreSearch: request.mode === 'navigate' });
+  // (ignoreSearch: a ?query on a page never changes the file served)
   const network = fetch(request)
     .then((response) => {
       if (response.ok) cache.put(key, response.clone());

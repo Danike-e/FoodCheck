@@ -24,6 +24,7 @@
   <link rel="preload" href="vendor/fonts/source-serif-4-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/fonts.css">
 
+  <script src="js/theme-init.js"></script>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -33,14 +34,20 @@
 
   <header class="masthead">
     <div class="masthead__inner">
-      <a class="brand" href="./" aria-label="FoodCheck home">
-        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="currentColor"/>
-          <circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="2.2"/>
-          <path d="M11.8 16.3l2.9 2.9 5.6-6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="brand__name">FoodCheck</span>
-      </a>
+      <div class="masthead__bar">
+        <a class="brand" href="./" aria-label="FoodCheck home">
+          <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="currentColor"/>
+            <circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="2.2"/>
+            <path d="M11.8 16.3l2.9 2.9 5.6-6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="brand__name">FoodCheck</span>
+        </a>
+        <button class="icon-btn" type="button" data-open-settings aria-haspopup="dialog" aria-controls="settings">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4M4.2 4.2l1.7 1.7M14.1 14.1l1.7 1.7M4.2 15.8l1.7-1.7M14.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Settings
+        </button>
+      </div>
       <h1 class="masthead__title">Food hygiene ratings near you</h1>
       <p class="masthead__tagline">Official inspection results from the Food Standards Agency, for anywhere in the UK.</p>
     </div>
@@ -106,11 +113,18 @@
         <ul class="legend" id="legend" aria-label="Rating key"></ul>
       </div>
 
+      <noscript><p class="status">FoodCheck needs JavaScript to search. You can look up ratings on the <a href="https://ratings.food.gov.uk/">Food Standards Agency website</a> instead.</p></noscript>
       <div id="status" class="status" aria-live="polite"></div>
       <ol class="places" id="places" aria-labelledby="results-heading"></ol>
       <button class="btn btn--outline load-more" id="load-more" type="button" hidden>Show more places</button>
 
       <footer class="footer">
+        <ul class="footer__links">
+          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms of use</a></li>
+          <li><a href="accessibility.html">Accessibility</a></li>
+          <li><button type="button" data-open-settings aria-haspopup="dialog" aria-controls="settings">Settings</button></li>
+        </ul>
         <p>Contains public sector information licensed under the
           <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener noreferrer" target="_blank">Open Government Licence v3.0</a>.
           Data from the <a href="https://ratings.food.gov.uk/" rel="noopener noreferrer" target="_blank">Food Standards Agency</a>.
@@ -120,6 +134,51 @@
       </footer>
   </main>
   </div>
+
+  <dialog class="dialog" id="settings" aria-labelledby="settings-title">
+    <form method="dialog" class="dialog__inner">
+      <div class="dialog__head">
+        <h2 class="dialog__title" id="settings-title">Settings</h2>
+        <button class="icon-btn icon-btn--round" value="close" aria-label="Close settings">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <fieldset class="setting">
+        <legend>Appearance</legend>
+        <div class="theme-options">
+          <div class="theme-option">
+            <input type="radio" name="theme" id="theme-system" value="system">
+            <label for="theme-system"><span class="swatch swatch--system" aria-hidden="true"></span>Match device</label>
+          </div>
+          <div class="theme-option">
+            <input type="radio" name="theme" id="theme-light" value="light">
+            <label for="theme-light"><span class="swatch" aria-hidden="true"></span>Light</label>
+          </div>
+          <div class="theme-option">
+            <input type="radio" name="theme" id="theme-dark" value="dark">
+            <label for="theme-dark"><span class="swatch swatch--dark" aria-hidden="true"></span>Dark</label>
+          </div>
+        </div>
+        <p class="setting__hint">“Match device” follows your phone or computer’s light or dark setting. The map itself always uses the standard OpenStreetMap colours.</p>
+      </fieldset>
+
+      <section class="setting" aria-labelledby="data-title">
+        <h3 class="setting__title" id="data-title">Your data</h3>
+        <p class="setting__hint">FoodCheck has no accounts and no cookies. Your settings and recent searches are kept on this device only, so the app can work offline.</p>
+        <button type="button" class="btn btn--outline" id="clear-data">Clear saved data</button>
+        <p class="setting__status" id="clear-status" role="status"></p>
+      </section>
+
+      <nav class="setting" aria-label="Legal and accessibility">
+        <p class="legal-links">
+          <a href="privacy.html">Privacy policy</a>
+          <a href="terms.html">Terms of use</a>
+          <a href="accessibility.html">Accessibility statement</a>
+        </p>
+      </nav>
+    </form>
+  </dialog>
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script type="module" src="js/app.js"></script>

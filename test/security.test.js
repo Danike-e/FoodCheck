@@ -150,3 +150,22 @@ test('local server: headers, traversal, malformed input, methods', async (t) => 
   assert.equal((await get('/api/fsa/Authorities')).status, 400);
   assert.equal((await get('/api/fsa/Establishments?latitude=51.5&longitude=-0.1&maxDistanceLimit=1&pageSize=9999')).status, 400);
 });
+
+/* ---------- Pages stay compatible with the strict CSP ---------- */
+
+test('public HTML has no inline scripts, inline handlers or style attributes', async () => {
+  const { readdir } = await import('node:fs/promises');
+  const dir = new URL('../public/', import.meta.url);
+  const pages = (await readdir(dir)).filter((f) => f.endsWith('.html'));
+  assert.ok(pages.length >= 4);
+  for (const file of pages) {
+    const html = await readFile(new URL(file, dir), 'utf8');
+    assert.doesNotMatch(html, /<script(?![^>]*\bsrc=)[^>]*>/i, `${file}: inline <script>`);
+    assert.doesNotMatch(html, /\son[a-z]+\s*=/i, `${file}: inline event handler`);
+    assert.doesNotMatch(html, /\sstyle\s*=/i, `${file}: style attribute`);
+    assert.match(html, /<script src="js\/theme-init\.js"><\/script>/, `${file}: theme-init missing`);
+    for (const link of ['privacy.html', 'terms.html', 'accessibility.html']) {
+      assert.ok(html.includes(`href="${link}"`), `${file}: no link to ${link}`);
+    }
+  }
+});

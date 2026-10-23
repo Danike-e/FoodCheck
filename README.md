@@ -9,6 +9,15 @@ Enter a postcode, use your location, or press and hold anywhere on the map (righ
 
 The site is plain HTML, CSS and JavaScript with no build step and no runtime dependencies. It installs as a PWA on iOS, Android and desktop, and deploys to Vercel as static files plus one small serverless function.
 
+## Before you launch
+
+The legal pages contain two placeholders you must fill in. Search `public/*.html` for each one:
+
+- `[Operator name]`: your name, or your company's registered name.
+- `[contact email]`: an address you check, for privacy and accessibility requests.
+
+The privacy policy and terms are written to match exactly what FoodCheck does. They are a sensible starting point, not legal advice, so have them reviewed if you're running FoodCheck as a business.
+
 ## Run it locally
 
 You need [Node.js](https://nodejs.org/) 20 or newer. There are no dependencies to install.
@@ -57,12 +66,17 @@ Businesses with no coordinates stay in the list, marked "No map location", and d
 
 ```
 public/                   Everything the browser can load (Vercel output directory)
-  index.html              Page markup
+  index.html              App page (search, map, list, settings dialog)
+  privacy.html            Privacy policy
+  terms.html              Terms of use
+  accessibility.html      Accessibility statement
   css/styles.css          All styles (light + dark, mobile first)
   css/fonts.css           Self-hosted font faces
   js/app.js               UI controller: search, map, list, selection, states
   js/api.js               postcodes.io + FSA API calls, proxy fallback
   js/ratings.js           Rating → colour / label / description, filter options
+  js/settings.js          Settings dialog: light / dark / match device, clear saved data
+  js/theme-init.js        Applies the saved theme before first paint (no flash)
   sw.js                   Service worker (offline app shell, recent results offline)
   manifest.webmanifest    PWA manifest
   icons/                  App icons (SVG + PNG, maskable, apple-touch)
@@ -85,7 +99,7 @@ test/security.test.js     Security tests (node:test, no network needed)
 | **Other headers** | HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` (location only for this site; camera, mic and payment off), COOP and CORP. |
 | **Proxy abuse** | Only two endpoints are reachable. Every parameter is type- and range-checked: UK-only coordinates, radius 1/2/5, page size ≤ 100, page ≤ 50. Unknown or duplicated parameters are rejected, and the upstream URL is rebuilt from the parsed values. Responses must be JSON under 2 MB, and redirects are refused. Errors are generic. Invalid requests never reach the FSA. |
 | **Third parties** | No CDNs, analytics or Google Fonts. Leaflet and the fonts are self-hosted, so the only outside requests go to postcodes.io, the FSA and OpenStreetMap tiles. |
-| **Privacy** | Your location is used once, in the browser, to find the nearest postcode. When it ends up in the URL (so results can be shared), it is rounded to about 100 m. Nothing is stored server-side, and there are no cookies. |
+| **Privacy** | Device location is used only on request. It is rounded to about 10 m before being sent to postcodes.io and the FSA, and to about 100 m in the shareable URL. Nothing is stored server-side, and there are no cookies. **Settings → Clear saved data** wipes everything kept on the device. |
 | **Links** | External links use `rel="noopener noreferrer"`. |
 | **Dev server** | Serves only `public/`, never dotfiles. It survives malformed URLs (the first version crashed on one), listens on localhost by default, and accepts only GET and HEAD. |
 | **Dependencies** | None at runtime, and none at build time. |
@@ -101,6 +115,8 @@ Optional hardening on Vercel:
 - The palette is warm paper and clay, with a serif display face (Source Serif 4) paired with DM Sans. Claude's own typefaces are proprietary, so these are close free alternatives, self-hosted.
 - Rating colours were chosen so the text on each badge meets WCAG AA contrast. Colour is never the only signal: badges and pins always show the number, ✓ / ! or text, and each card spells out what the rating means ("Generally satisfactory").
 - On phones the map sits above the list and stays pinned while you scroll, so tapping a card always shows its pin. From 960px wide, the sidebar holds search and results and the map fills the rest of the screen.
+- **Settings** offers Light, Dark or Match device. The choice is saved on the device and applied before the page paints, so there's no flash, on every page.
+- **Accessibility:** the app targets WCAG 2.2 AA. It has zero axe-core violations on every page and state, in both themes. Text meets 4.5:1 contrast and form controls 3:1. It works by keyboard with visible focus, uses a native modal `<dialog>` for settings, live regions for results, and reflows to 320 px. See `public/accessibility.html`.
 - The input is 17px so iOS doesn't zoom on focus. The layout respects safe areas (`viewport-fit=cover`), and dark mode and reduced motion are supported.
 - Searches are kept in the URL (`?pc=G37TF&r=2&rating=4`), so results can be bookmarked and shared.
 

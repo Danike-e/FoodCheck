@@ -13,6 +13,7 @@ import {
 import {
   describeRating, badgeSizeClass, formatInspectionDate, RATING_FILTERS, LEGEND,
 } from './ratings.js';
+import { initSettings } from './settings.js';
 
 /* ---------- DOM ---------- */
 
@@ -616,7 +617,9 @@ function useMyLocation() {
     (pos) => {
       els.locate.disabled = false;
       els.locate.classList.remove('is-busy');
-      searchByCoords(pos.coords.latitude, pos.coords.longitude);
+      // Round to 4 dp (~10 m) before the position is sent to postcodes.io / the FSA: plenty for a 1-mile search.
+      const round = (n) => Math.round(n * 1e4) / 1e4;
+      searchByCoords(round(pos.coords.latitude), round(pos.coords.longitude));
     },
     (err) => {
       els.locate.disabled = false;
@@ -714,6 +717,7 @@ function restoreFromUrl() {
 }
 
 async function init() {
+  initSettings();
   showMapHint();
   const params = restoreFromUrl();
   // Scottish filter values are words ("Pass"), FHRS ones are digits.
