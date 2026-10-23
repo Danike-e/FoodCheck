@@ -1133,7 +1133,30 @@ main h2, [data-section] { scroll-margin-top: 64px; }
 .landing__header { max-width: 1080px; }
 .btn--small { min-height: 40px; height: 40px; padding: 0 16px; font-size: 14px; }
 .landing-page .doc-footer__inner { max-width: 1080px; }
-.landing { color: var(--ink); }
+.landing { color: var(--ink); overflow-x: clip; }
+
+/* Very fine dot grid on the plain (untinted) sections. It sits on a pseudo-element that
+   spans the full window width, fades out at the top and bottom of each section, and is
+   drawn from the text colour so it suits light and dark themes. */
+.landing > section:not(.band--tint) { position: relative; isolation: isolate; }
+.landing > section:not(.band--tint)::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(50% - 50vw);
+  z-index: -1;
+  pointer-events: none;
+  --dot-size: 0.75px;
+  --dot-strength: 16%;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--ink) var(--dot-strength), transparent) var(--dot-size), transparent calc(var(--dot-size) + 0.5px));
+  background-size: 20px 20px;
+  background-position: center top;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+/* High-density phone screens render the dots crisper, so make them a touch finer there */
+@media (max-width: 640px) {
+  .landing > section:not(.band--tint)::before { --dot-size: 0.6px; --dot-strength: 12%; background-size: 18px 18px; }
+}
 .landing a:not(.btn) { color: var(--accent); text-underline-offset: 3px; }
 
 .hero, .band > *, .cta { max-width: 1080px; margin-left: auto; margin-right: auto; }
