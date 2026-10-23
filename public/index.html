@@ -43,10 +43,16 @@
           </svg>
           <span class="brand__name">FoodCheck</span>
         </a>
-        <button class="icon-btn" type="button" data-open-settings aria-haspopup="dialog" aria-controls="settings">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4M4.2 4.2l1.7 1.7M14.1 14.1l1.7 1.7M4.2 15.8l1.7-1.7M14.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Settings
-        </button>
+        <div class="masthead__actions">
+          <a class="icon-btn" href="history.html">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 10a6.8 6.8 0 1 0 2-4.8M3 3.5v3.2h3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 6.3V10l2.6 1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="icon-btn__text">History</span>
+          </a>
+          <button class="icon-btn" type="button" data-open-settings aria-haspopup="dialog" aria-controls="settings">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4M4.2 4.2l1.7 1.7M14.1 14.1l1.7 1.7M4.2 15.8l1.7-1.7M14.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span class="icon-btn__text">Settings</span>
+          </button>
+        </div>
       </div>
       <h1 class="masthead__title">Food hygiene ratings near you</h1>
       <p class="masthead__tagline">Official inspection results from the Food Standards Agency, for anywhere in the UK.</p>
@@ -73,6 +79,7 @@
         <button class="btn btn--primary" type="submit">Search</button>
       </div>
       <p class="search__error" id="postcode-error" role="alert" hidden></p>
+      <nav class="recent" id="recent" aria-label="Recent searches" hidden></nav>
     </form>
 
     <fieldset class="filters" id="filters">
@@ -120,6 +127,7 @@
 
       <footer class="footer">
         <ul class="footer__links">
+          <li><a href="history.html">History</a></li>
           <li><a href="privacy.html">Privacy</a></li>
           <li><a href="terms.html">Terms of use</a></li>
           <li><a href="accessibility.html">Accessibility</a></li>
@@ -165,13 +173,19 @@
 
       <section class="setting" aria-labelledby="data-title">
         <h3 class="setting__title" id="data-title">Your data</h3>
-        <p class="setting__hint">FoodCheck has no accounts and no cookies. Your settings and recent searches are kept on this device only, so the app can work offline.</p>
+        <p class="setting__hint">FoodCheck has no accounts and no cookies. Your settings and search history are kept on this device only.</p>
+        <div class="switch">
+          <input type="checkbox" id="history-toggle" role="switch">
+          <label for="history-toggle">Save search history</label>
+        </div>
+        <p class="setting__hint">Shows your recent searches under the search box and on the <a href="history.html">History</a> page.</p>
         <button type="button" class="btn btn--outline" id="clear-data">Clear saved data</button>
         <p class="setting__status" id="clear-status" role="status"></p>
       </section>
 
       <nav class="setting" aria-label="Legal and accessibility">
         <p class="legal-links">
+          <a href="history.html">Search history</a>
           <a href="privacy.html">Privacy policy</a>
           <a href="terms.html">Terms of use</a>
           <a href="accessibility.html">Accessibility statement</a>

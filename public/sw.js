@@ -11,7 +11,7 @@
  * Bump VERSION whenever shell files change.
  */
 
-const VERSION = 'v6';
+const VERSION = 'v7';
 const SHELL_CACHE = `foodcheck-shell-${VERSION}`;
 const RUNTIME_CACHE = `foodcheck-runtime-${VERSION}`;
 const RUNTIME_MAX_ENTRIES = 60;
@@ -22,6 +22,7 @@ const SHELL = [
   './privacy.html',
   './terms.html',
   './accessibility.html',
+  './history.html',
   './css/fonts.css',
   './css/styles.css',
   './js/app.js',
@@ -29,6 +30,8 @@ const SHELL = [
   './js/ratings.js',
   './js/settings.js',
   './js/pager.js',
+  './js/history.js',
+  './js/history-page.js',
   './js/theme-init.js',
   './vendor/leaflet/leaflet.css',
   './vendor/leaflet/leaflet.js',

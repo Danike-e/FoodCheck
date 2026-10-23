@@ -4,7 +4,11 @@
  * handles focus trapping, Escape to close and returning focus to the opener.
  */
 
+import { isHistoryEnabled, setHistoryEnabled, clearHistory } from './history.js';
+
 const THEME_KEY = 'foodcheck:theme';
+// Clearing data must not quietly switch history back on.
+const KEEP_ON_CLEAR = ['foodcheck:historyOff'];
 const THEME_COLOURS = { light: '#FAF9F5', dark: '#1F1E1D' };
 
 function readTheme() {
@@ -37,7 +41,9 @@ export function applyTheme(theme) {
 /** Remove everything FoodCheck stores on this device (except the offline app files). */
 async function clearSavedData() {
   try {
-    Object.keys(localStorage).filter((k) => k.startsWith('foodcheck:')).forEach((k) => localStorage.removeItem(k));
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('foodcheck:') && !KEEP_ON_CLEAR.includes(k))
+      .forEach((k) => localStorage.removeItem(k));
   } catch { /* nothing stored */ }
   if ('caches' in window) {
     const keys = await caches.keys();
@@ -46,12 +52,16 @@ async function clearSavedData() {
   applyTheme('system');
 }
 
-export function initSettings() {
+/**
+ * @param {{ onHistoryChange?: () => void }} [opts]  called when history is cleared or switched off
+ */
+export function initSettings({ onHistoryChange = () => {} } = {}) {
   const dialog = document.getElementById('settings');
   const openers = document.querySelectorAll('[data-open-settings]');
   const radios = dialog.querySelectorAll('input[name="theme"]');
   const clearBtn = document.getElementById('clear-data');
   const clearStatus = document.getElementById('clear-status');
+  const historyToggle = document.getElementById('history-toggle');
 
   const syncRadios = () => {
     const current = readTheme();
@@ -60,18 +70,29 @@ export function initSettings() {
 
   openers.forEach((btn) => btn.addEventListener('click', () => {
     syncRadios();
+    historyToggle.checked = isHistoryEnabled();
     clearStatus.textContent = '';
     dialog.showModal();
   }));
 
   radios.forEach((r) => r.addEventListener('change', () => applyTheme(r.value)));
 
+  historyToggle.addEventListener('change', () => {
+    setHistoryEnabled(historyToggle.checked);
+    if (!historyToggle.checked) clearHistory(); // turning it off also forgets what was saved
+    clearStatus.textContent = historyToggle.checked
+      ? 'Search history is on.'
+      : 'Search history is off, and your saved searches have been deleted.';
+    onHistoryChange();
+  });
+
   clearBtn.addEventListener('click', async () => {
     clearBtn.disabled = true;
     await clearSavedData();
     syncRadios();
+    onHistoryChange();
     clearBtn.disabled = false;
-    clearStatus.textContent = 'Done. Your settings and saved searches have been removed from this device.';
+    clearStatus.textContent = 'Done. Your settings, search history and saved results have been removed from this device.';
   });
 
   // Clicking the dimmed backdrop closes the dialog (the dialog box itself is the only child area).

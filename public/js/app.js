@@ -15,6 +15,7 @@ import {
 } from './ratings.js';
 import { initSettings } from './settings.js';
 import { pageWindow } from './pager.js';
+import { addToHistory, getHistory, historyUrl, describeEntry } from './history.js';
 
 /* ---------- DOM ---------- */
 
@@ -33,6 +34,7 @@ const els = {
   list: $('#places'),
   pager: $('#pager'),
   heading: $('#results-heading'),
+  recent: $('#recent'),
   mapLoading: $('#map-loading'),
 };
 
@@ -518,17 +520,61 @@ async function loadEstablishments(page = 1, { fromPager = false } = {}) {
       els.summary.textContent = '';
       renderLegend();
       setStatus('empty');
+      if (!fromPager) recordSearch();
       return;
     }
     setStatus('none');
     renderResults();
     syncUrl();
+    if (!fromPager) recordSearch();
     if (fromPager) els.heading.focus({ preventScroll: true }); // screen readers start at the new page
   } catch (err) {
     handleError(err, () => loadEstablishments(page, { fromPager }));
   } finally {
     els.mapLoading.hidden = true;
   }
+}
+
+/** Save the current search to history (only kept on this device) and refresh the Recent row. */
+function recordSearch() {
+  const { origin, filters } = state;
+  const typeOption = els.type.selectedOptions[0];
+  addToHistory({
+    source: origin.source,
+    postcode: origin.postcode || '',
+    area: origin.area || '',
+    // Same precision as the shareable URL: ~100 m for device locations, ~10 m for map picks.
+    lat: origin.source === 'device' ? Math.round(origin.lat * 1e3) / 1e3 : origin.lat,
+    lng: origin.source === 'device' ? Math.round(origin.lng * 1e3) / 1e3 : origin.lng,
+    radius: filters.radius,
+    rating: filters.rating,
+    businessType: filters.businessType,
+    businessTypeName: filters.businessType && typeOption ? typeOption.textContent : '',
+    total: state.total,
+  });
+  renderRecent();
+}
+
+/** Up to four recent searches under the search box, plus a link to the full history. */
+function renderRecent() {
+  const entries = getHistory().slice(0, 4);
+  els.recent.hidden = !entries.length;
+  if (!entries.length) { els.recent.innerHTML = ''; return; }
+  els.recent.innerHTML = `
+    <h2 class="recent__label">Recent</h2>
+    <ul class="recent__list">
+      ${entries.map((e) => {
+        const d = describeEntry(e);
+        // Compact chip: an icon plus the postcode; the full description is the accessible name and tooltip.
+        const full = [d.title, d.area, d.filters].filter(Boolean).join(' · ');
+        const icon = e.source === 'postcode' ? '' : `<svg class="chip__icon" viewBox="0 0 20 20" aria-hidden="true">${e.source === 'device'
+          ? '<circle cx="10" cy="10" r="3" fill="currentColor"/><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>'
+          : '<path d="M10 17.5s-5.5-5-5.5-9a5.5 5.5 0 0 1 11 0c0 4-5.5 9-5.5 9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="10" cy="8.5" r="2" fill="currentColor"/>'}</svg>`;
+        const short = e.postcode || d.title;
+        return `<li><a class="chip chip--link" href="${escapeHtml(historyUrl(e))}" title="${escapeHtml(full)}" aria-label="${escapeHtml(full)}">${icon}${escapeHtml(short)}</a></li>`;
+      }).join('')}
+    </ul>
+    <a class="recent__all" href="history.html">All history</a>`;
 }
 
 /** The first search after opening a shared link uses its ?p= page; later searches start at 1. */
@@ -635,6 +681,7 @@ async function searchByCoords(lat, lng, source = 'device') {
       lat, lng,
       source,
       postcode: near?.postcode || null,
+      area: near?.area || '',
       country: near?.country || null,
       label: near ? `${what} (near ${near.postcode})` : what,
     };
@@ -795,44 +842,58 @@ async function loadBusinessTypes() {
   }
 }
 
-function restoreFromUrl() {
-  const params = new URLSearchParams(location.search);
+/**
+ * Read search settings from URL parameters (a shared link, a reload or a
+ * history entry). Only values the UI could have produced are accepted.
+ */
+function restoreFromParams(params) {
   const radius = Number(params.get('r'));
-  if ([1, 2, 5].includes(radius)) {
-    state.filters.radius = radius;
-    document.getElementById(`r${radius}`).checked = true;
-  }
-  // Only accept values the UI could have produced; ignore anything else.
+  state.filters.radius = [1, 2, 5].includes(radius) ? radius : 1;
+  document.getElementById(`r${state.filters.radius}`).checked = true;
   const rating = params.get('rating') || '';
   const knownRatings = [...RATING_FILTERS.fhrs, ...RATING_FILTERS.fhis].map((o) => o.value);
   state.filters.rating = knownRatings.includes(rating) ? rating : '';
   const page = Number(params.get('p'));
-  if (Number.isInteger(page) && page >= 1 && page <= 1000) state.initialPage = page;
+  state.initialPage = Number.isInteger(page) && page >= 1 && page <= 1000 ? page : 1;
   const type = params.get('type') || '';
   state.filters.businessType = /^\d{1,6}$/.test(type) ? type : '';
-  return params;
-}
-
-async function init() {
-  initSettings();
-  showMapHint();
-  const params = restoreFromUrl();
+  els.type.value = state.filters.businessType;
+  if (els.type.value !== state.filters.businessType) state.filters.businessType = ''; // unknown type id
   // Scottish filter values are words ("Pass"), FHRS ones are digits.
   setScheme(/^[a-z]/i.test(state.filters.rating) ? 'fhis' : 'fhrs');
-  const types = loadBusinessTypes();
+}
 
+/** Run the search described by URL parameters. Returns false if they don't describe one. */
+function searchFromParams(params) {
+  restoreFromParams(params);
   const lat = parseFloat(params.get('lat'));
   const lng = parseFloat(params.get('lng'));
   if (params.get('pc')) {
     els.input.value = formatPostcode(params.get('pc'));
-    await types; // so a restored business-type filter is selectable
     searchPostcode(params.get('pc'));
-  } else if (inUk(lat, lng)) {
-    await types;
-    searchByCoords(lat, lng, 'map'); // a shared link: treat it as a picked point, not the viewer's location
-  } else {
-    setStatus('intro');
+    return true;
   }
+  if (inUk(lat, lng)) {
+    searchByCoords(lat, lng, 'map'); // a shared link: treat it as a picked point, not the viewer's location
+    return true;
+  }
+  return false;
+}
+
+// Recent searches re-run in place rather than reloading the page.
+els.recent.addEventListener('click', (e) => {
+  const link = e.target.closest('a.chip--link');
+  if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // let "open in new tab" work
+  e.preventDefault();
+  searchFromParams(new URL(link.href).searchParams);
+});
+
+async function init() {
+  initSettings({ onHistoryChange: renderRecent });
+  showMapHint();
+  renderRecent();
+  await loadBusinessTypes(); // so a restored business-type filter is selectable
+  if (!searchFromParams(new URLSearchParams(location.search))) setStatus('intro');
 }
 
 init();
