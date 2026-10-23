@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="css/styles.css">
   <script type="module" src="js/back-to-top.js"></script>
+  <script type="module" src="js/section-nav.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#results-heading">Skip to results</a>
@@ -59,7 +60,7 @@
     </div>
   </header>
 
-  <section class="search" aria-label="Search">
+  <section class="search" id="search" aria-label="Search" data-section="Search">
     <form class="search__form" id="search-form" novalidate>
       <div class="search__labelrow">
         <label class="search__label" for="postcode">Postcode</label>
@@ -113,7 +114,7 @@
     <div class="map-pane__loading" id="map-loading" hidden><span class="spinner" aria-hidden="true"></span></div>
   </div>
 
-  <main class="list-pane" id="results">
+  <main class="list-pane" id="results" data-section="Results">
       <div class="list-pane__head">
         <h2 class="list-pane__title" id="results-heading" tabindex="-1">Nearby ratings</h2>
         <p class="list-pane__summary" id="summary" aria-live="polite"></p>
@@ -125,7 +126,7 @@
       <ol class="places" id="places" aria-labelledby="results-heading"></ol>
       <nav class="pager" id="pager" aria-label="Results pages" hidden></nav>
 
-      <footer class="footer">
+      <footer class="footer" id="info" data-section="About & legal">
         <ul class="footer__links">
           <li><a href="about.html">About FoodCheck</a></li>
           <li><a href="history.html">History</a></li>

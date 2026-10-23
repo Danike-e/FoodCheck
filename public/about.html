@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/styles.css">
   <script type="module" src="js/back-to-top.js"></script>
+  <script type="module" src="js/section-nav.js"></script>
   <script type="module" src="js/about-demo.js"></script>
 </head>
 <body class="doc-page landing-page">
@@ -35,7 +36,7 @@
   </header>
 
   <main class="landing" id="main">
-    <section class="hero hero--text" aria-labelledby="hero-title">
+    <section class="hero hero--text" id="overview" aria-labelledby="hero-title" data-section="Overview">
       <div class="hero__text">
         <p class="hero__eyebrow">Free · No sign-up · Works across the UK</p>
         <h1 class="hero__title" id="hero-title">Know how clean the kitchen is before you eat.</h1>
@@ -48,7 +49,7 @@
       </div>
     </section>
 
-    <section class="band demo" id="how" aria-labelledby="demo-title">
+    <section class="band demo" id="how" aria-labelledby="demo-title" data-section="How it works">
       <div class="demo__layout">
         <div class="demo__head">
           <h2 class="band__title" id="demo-title">See how it works</h2>
@@ -127,7 +128,7 @@
       </div>
     </section>
 
-    <section class="band" id="ways" aria-labelledby="how-title">
+    <section class="band" id="ways" aria-labelledby="how-title" data-section="Ways to search">
       <h2 class="band__title" id="how-title">Three ways to search</h2>
       <ul class="features features--3">
         <li class="feature">
@@ -148,7 +149,7 @@
       </ul>
     </section>
 
-    <section class="band band--tint" aria-labelledby="ratings-title">
+    <section class="band band--tint" id="ratings" aria-labelledby="ratings-title" data-section="Ratings">
       <div class="split">
         <div>
           <h2 class="band__title" id="ratings-title">What the ratings mean</h2>
@@ -177,7 +178,7 @@
       </div>
     </section>
 
-    <section class="band" aria-labelledby="features-title">
+    <section class="band" id="features" aria-labelledby="features-title" data-section="Features">
       <h2 class="band__title" id="features-title">Built for deciding where to eat</h2>
       <ul class="features">
         <li class="feature"><h3>Filter what matters</h3><p>Only show places rated 4 or better, or only takeaways, pubs or cafés. Choose 1, 2 or 5 miles.</p></li>
@@ -189,7 +190,7 @@
       </ul>
     </section>
 
-    <section class="band band--tint" aria-labelledby="install-title">
+    <section class="band band--tint" id="install" aria-labelledby="install-title" data-section="Install">
       <div class="split">
         <div>
           <h2 class="band__title" id="install-title">Put it on your home screen</h2>
@@ -203,7 +204,7 @@
       </div>
     </section>
 
-    <section class="band" aria-labelledby="privacy-title">
+    <section class="band" id="privacy" aria-labelledby="privacy-title" data-section="Privacy">
       <div class="split">
         <div>
           <h2 class="band__title" id="privacy-title">Private by design</h2>
@@ -219,7 +220,7 @@
       </div>
     </section>
 
-    <section class="band band--tint" aria-labelledby="faq-title">
+    <section class="band band--tint" id="faq" aria-labelledby="faq-title" data-section="Questions">
       <h2 class="band__title" id="faq-title">Questions</h2>
       <div class="faq">
         <details>
@@ -249,7 +250,7 @@
       </div>
     </section>
 
-    <section class="cta" aria-labelledby="cta-title">
+    <section class="cta" id="start" aria-labelledby="cta-title" data-section="Get started">
       <h2 class="cta__title" id="cta-title">Check somewhere now</h2>
       <p>Type a postcode or use your location. Results take a couple of seconds.</p>
       <a class="btn btn--primary" href="./">Open FoodCheck</a>
