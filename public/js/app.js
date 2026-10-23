@@ -8,12 +8,13 @@
 
 import {
   AppError, lookupPostcode, reverseGeocode, fetchEstablishments, fetchBusinessTypes,
-  looksLikePostcode, formatPostcode, compactPostcode,
+  looksLikePostcode, formatPostcode, compactPostcode, PAGE_SIZE,
 } from './api.js';
 import {
   describeRating, badgeSizeClass, formatInspectionDate, RATING_FILTERS, LEGEND,
 } from './ratings.js';
 import { initSettings } from './settings.js';
+import { pageWindow } from './pager.js';
 
 /* ---------- DOM ---------- */
 
@@ -30,7 +31,8 @@ const els = {
   legend: $('#legend'),
   status: $('#status'),
   list: $('#places'),
-  loadMore: $('#load-more'),
+  pager: $('#pager'),
+  heading: $('#results-heading'),
   mapLoading: $('#map-loading'),
 };
 
@@ -45,6 +47,7 @@ const state = {
   results: [],        // normalised establishments, sorted by distance
   page: 1,
   totalPages: 1,
+  initialPage: 1,     // page from a shared URL, used once by the first search
   total: 0,
   selectedId: null,
   controller: null,   // AbortController for the in-flight search
@@ -214,14 +217,16 @@ function renderResults({ fit = true } = {}) {
   const unmapped = results.filter((r) => !r.coords).length;
   const where = state.origin.label;
   const miles = state.filters.radius === 1 ? '1 mile' : `${state.filters.radius} miles`;
-  let summary = state.total > results.length
-    ? `Nearest ${results.length.toLocaleString('en-GB')} of ${plural(state.total, 'place')} within ${miles} of ${where}.`
+  const first = (state.page - 1) * PAGE_SIZE + 1;
+  const last = first + results.length - 1;
+  let summary = state.totalPages > 1
+    ? `Places ${first.toLocaleString('en-GB')}–${last.toLocaleString('en-GB')} of ${state.total.toLocaleString('en-GB')} within ${miles} of ${where}, nearest first.`
     : `${plural(state.total, 'place')} within ${miles} of ${where}.`;
   if (unmapped) summary += ` ${plural(unmapped, 'place')} ${unmapped === 1 ? 'has' : 'have'} no map location.`;
   els.summary.textContent = summary;
 
   renderLegend();
-  els.loadMore.hidden = state.page >= state.totalPages;
+  renderPager();
 
   if (fit) fitToResults();
   if (state.selectedId && !results.some((r) => r.id === state.selectedId)) state.selectedId = null;
@@ -289,7 +294,7 @@ function setStatus(kind, opts = {}) {
         <div class="badge skeleton"></div>
         <div class="place__body"><span class="skeleton skeleton--line w60"></span><span class="skeleton skeleton--line w40"></span><span class="skeleton skeleton--line w80"></span></div>
       </li>`).join('');
-    els.loadMore.hidden = true;
+    els.pager.hidden = true;
     return;
   }
 
@@ -311,7 +316,7 @@ function setStatus(kind, opts = {}) {
   if (kind === 'error') {
     els.summary.textContent = '';
     els.list.innerHTML = '';
-    els.loadMore.hidden = true;
+    els.pager.hidden = true;
     els.status.innerHTML = `
       <div role="alert">
         <h3 class="status__title">${escapeHtml(opts.title || 'Something went wrong')}</h3>
@@ -325,7 +330,7 @@ function setStatus(kind, opts = {}) {
     const filtered = state.filters.rating || state.filters.businessType;
     const wider = [1, 2, 5].find((r) => r > state.filters.radius);
     els.list.innerHTML = '';
-    els.loadMore.hidden = true;
+    els.pager.hidden = true;
     els.status.innerHTML = `
       <h3 class="status__title">No places found</h3>
       <p>Nothing within ${state.filters.radius === 1 ? '1 mile' : `${state.filters.radius} miles`} of ${escapeHtml(state.origin.label)}${filtered ? ' matches your filters' : ''}.</p>
@@ -391,6 +396,7 @@ function syncUrl() {
     params.set('lng', origin.lng.toFixed(dp));
   }
   if (state.filters.radius !== 1) params.set('r', state.filters.radius);
+  if (state.page > 1) params.set('p', state.page);
   if (state.filters.rating) params.set('rating', state.filters.rating);
   if (state.filters.businessType) params.set('type', state.filters.businessType);
   const qs = params.toString();
@@ -420,18 +426,28 @@ function handleError(err, retry) {
   });
 }
 
-/** Fetch page 1 for the current origin + filters. */
-async function loadEstablishments() {
+/**
+ * Fetch one page of results for the current origin + filters.
+ * @param {number} page
+ * @param {{ fromPager?: boolean }} [opts]  true when the user changed page (moves focus to the results)
+ */
+async function loadEstablishments(page = 1, { fromPager = false } = {}) {
   const signal = startRequest();
   state.selectedId = null;
+  state.page = page;
   showOrigin();
-  fitToSearchArea();
+  if (!fromPager) fitToSearchArea();
   syncUrl();
-  setStatus('loading', { message: `Finding places near ${state.origin.label}…` });
+  setStatus('loading', { message: page > 1 ? `Loading page ${page}…` : `Finding places near ${state.origin.label}…` });
+  if (fromPager) showResultsTop();
   try {
-    const data = await fetchEstablishments({ ...state.origin, ...state.filters, page: 1 }, { signal });
-    state.page = data.page;
-    state.totalPages = data.totalPages;
+    const data = await fetchEstablishments({ ...state.origin, ...state.filters, page }, { signal });
+    // A shared link can point past the last page (data changes): go to the last real page instead.
+    if (!data.establishments.length && page > 1 && data.totalPages >= 1 && data.total > 0) {
+      return loadEstablishments(Math.min(page - 1, data.totalPages), { fromPager });
+    }
+    state.page = page;
+    state.totalPages = Math.max(1, data.totalPages);
     state.total = data.total;
     state.results = sortByDistance(data.establishments.map(normalise));
     // No country from the postcode lookup (e.g. raw device location): infer the scheme from the results.
@@ -450,11 +466,52 @@ async function loadEstablishments() {
     }
     setStatus('none');
     renderResults();
+    syncUrl();
+    if (fromPager) els.heading.focus({ preventScroll: true }); // screen readers start at the new page
   } catch (err) {
-    handleError(err, loadEstablishments);
+    handleError(err, () => loadEstablishments(page, { fromPager }));
   } finally {
     els.mapLoading.hidden = true;
   }
+}
+
+/** The first search after opening a shared link uses its ?p= page; later searches start at 1. */
+function takeInitialPage() {
+  const page = state.initialPage;
+  state.initialPage = 1;
+  return page;
+}
+
+/** Scroll so the top of the results is visible (the list pane scrolls on desktop, the window on phones). */
+function showResultsTop() {
+  const behavior = prefersReducedMotion ? 'auto' : 'smooth';
+  if (window.matchMedia('(min-width: 960px)').matches) {
+    document.querySelector('.list-pane').scrollTo({ top: 0, behavior });
+  } else {
+    els.heading.scrollIntoView({ behavior, block: 'start' });
+  }
+}
+
+function renderPager() {
+  const { page, totalPages } = state;
+  if (totalPages <= 1) {
+    els.pager.hidden = true;
+    els.pager.innerHTML = '';
+    return;
+  }
+  const arrow = (dir) => `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${dir === 'prev' ? 'M10 3L5 8l5 5' : 'M6 3l5 5-5 5'}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const numbers = pageWindow(page, totalPages).map((p) => (p === null
+    ? '<li class="pager__gap" aria-hidden="true">…</li>'
+    : `<li><button type="button" class="pager__num" data-page="${p}"${p === page ? ' aria-current="page"' : ''} aria-label="Page ${p}${p === totalPages ? ', last page' : ''}">${p}</button></li>`)).join('');
+
+  els.pager.hidden = false;
+  els.pager.innerHTML = `
+    <p class="pager__status">Page ${page} of ${totalPages.toLocaleString('en-GB')}</p>
+    <div class="pager__row">
+      <button type="button" class="pager__step" data-page="${page - 1}"${page <= 1 ? ' disabled' : ''}>${arrow('prev')}Previous<span class="visually-hidden"> page</span></button>
+      <ul class="pager__nums">${numbers}</ul>
+      <button type="button" class="pager__step" data-page="${page + 1}"${page >= totalPages ? ' disabled' : ''}>Next<span class="visually-hidden"> page</span>${arrow('next')}</button>
+    </div>`;
 }
 
 /** Items without coordinates keep the API's order but go after mapped ones at the same rank. */
@@ -463,29 +520,6 @@ function sortByDistance(list) {
     .map((p, i) => ({ p, i }))
     .sort((a, b) => (a.p.distance ?? Infinity) - (b.p.distance ?? Infinity) || a.i - b.i)
     .map(({ p }) => p);
-}
-
-async function loadMore() {
-  const signal = startRequest();
-  els.loadMore.disabled = true;
-  els.loadMore.textContent = 'Loading…';
-  try {
-    const data = await fetchEstablishments({ ...state.origin, ...state.filters, page: state.page + 1 }, { signal });
-    state.page = data.page;
-    state.totalPages = data.totalPages;
-    const seen = new Set(state.results.map((r) => r.id));
-    const extra = data.establishments.map(normalise).filter((p) => !seen.has(p.id));
-    state.results = sortByDistance([...state.results, ...extra]);
-    renderResults({ fit: false });
-    if (state.selectedId) select(state.selectedId);
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      els.summary.textContent = err.message || 'Couldn’t load more places. Please try again.';
-    }
-  } finally {
-    els.loadMore.disabled = false;
-    els.loadMore.textContent = 'Show more places';
-  }
 }
 
 async function searchPostcode(raw) {
@@ -511,7 +545,7 @@ async function searchPostcode(raw) {
     state.origin = { ...place, source: 'postcode', label: place.postcode };
     setScheme(place.country === 'Scotland' ? 'fhis' : 'fhrs');
     revealResultsOnMobile();
-    await loadEstablishments();
+    await loadEstablishments(takeInitialPage());
   } catch (err) {
     if (err.kind === 'invalid-postcode') {
       showInputError(err.message);
@@ -551,7 +585,7 @@ async function searchByCoords(lat, lng, source = 'device') {
     els.input.value = near ? near.postcode : '';
     setScheme(near?.country === 'Scotland' ? 'fhis' : 'fhrs');
     if (source === 'device') revealResultsOnMobile(); // a map pick: the map is already on screen
-    await loadEstablishments();
+    await loadEstablishments(takeInitialPage());
   } catch (err) {
     handleError(err, () => searchByCoords(lat, lng, source));
   }
@@ -654,7 +688,12 @@ for (const control of [els.rating, els.type, ...els.radios]) {
   });
 }
 
-els.loadMore.addEventListener('click', loadMore);
+els.pager.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-page]');
+  if (!btn || btn.disabled || btn.getAttribute('aria-current')) return;
+  const page = Number(btn.dataset.page);
+  if (page >= 1 && page <= state.totalPages) loadEstablishments(page, { fromPager: true });
+});
 
 // Clicking anywhere on a card (except its link) selects it; the name button covers keyboard users.
 els.list.addEventListener('click', (e) => {
@@ -711,6 +750,8 @@ function restoreFromUrl() {
   const rating = params.get('rating') || '';
   const knownRatings = [...RATING_FILTERS.fhrs, ...RATING_FILTERS.fhis].map((o) => o.value);
   state.filters.rating = knownRatings.includes(rating) ? rating : '';
+  const page = Number(params.get('p'));
+  if (Number.isInteger(page) && page >= 1 && page <= 1000) state.initialPage = page;
   const type = params.get('type') || '';
   state.filters.businessType = /^\d{1,6}$/.test(type) ? type : '';
   return params;

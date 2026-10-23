@@ -403,6 +403,11 @@ button, input, select { font: inherit; color: inherit; }
   letter-spacing: -0.01em;
 }
 .list-pane__title:focus { outline: none; }
+/* When paging, the heading is scrolled into view: keep it clear of the sticky map on phones */
+.list-pane__title { scroll-margin-top: calc(var(--map-h) + 16px); }
+@media (min-width: 960px) {
+  .list-pane__title { scroll-margin-top: 16px; }
+}
 .list-pane__summary { margin-top: 4px; color: var(--ink-2); font-size: 14px; min-height: 1.5em; }
 
 .legend {
@@ -587,7 +592,46 @@ button, input, select { font: inherit; color: inherit; }
 .skeleton--line.w60 { width: 60%; height: 16px; }
 .skeleton--line.w80 { width: 80%; }
 
-.load-more { width: 100%; margin: 12px 0 8px; }
+/* ---------- Pagination ---------- */
+
+.pager {
+  margin: 8px 0 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  container-type: inline-size;
+}
+.pager__status { margin-bottom: 10px; font-size: 14px; color: var(--ink-2); text-align: center; }
+.pager__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pager__nums { display: flex; align-items: center; gap: 4px; margin: 0; padding: 0; list-style: none; }
+
+.pager__step, .pager__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.pager__step { gap: 6px; padding: 0 12px; }
+.pager__step svg { width: 14px; height: 14px; }
+.pager__num { padding: 0 6px; border-color: transparent; background: transparent; }
+.pager__step:hover:not(:disabled), .pager__num:hover:not([aria-current]) { border-color: var(--ink-3); }
+.pager__num[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--bg); cursor: default; }
+.pager__step:disabled { opacity: .45; cursor: not-allowed; }
+.pager__gap { min-width: 20px; text-align: center; color: var(--ink-2); }
+
+/* Narrow lists: drop the numbers, keep Previous / Next and "Page x of y" */
+@container (max-width: 400px) {
+  .pager__nums { display: none; }
+  .pager__step { flex: 1; }
+}
 
 /* ---------- Footer ---------- */
 

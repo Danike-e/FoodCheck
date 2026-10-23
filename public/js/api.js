@@ -11,6 +11,9 @@ const FSA_API = 'https://api.ratings.food.gov.uk';
 const FSA_PROXY = 'api/fsa';
 const FSA_HEADERS = { 'x-api-version': '2', accept: 'application/json' };
 
+/** Places per page of results (and pins on the map at once). */
+export const PAGE_SIZE = 50;
+
 /** Error with a user-facing message and a machine-readable kind. */
 export class AppError extends Error {
   constructor(kind, message) {
@@ -134,7 +137,7 @@ export async function fetchEstablishments({ lat, lng, radius, rating, businessTy
     longitude: Number(lng).toFixed(6),
     maxDistanceLimit: radius,
     sortOptionKey: 'distance',
-    pageSize: 100,
+    pageSize: PAGE_SIZE,
     pageNumber: page,
     ratingKey: rating,
     // Numeric FHRS ratings mean "this or better"; FHIS values are exact matches.

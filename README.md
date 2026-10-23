@@ -58,7 +58,7 @@ Things worth knowing about the FSA API:
 - The rating filter only works with short keys (`5`, `4`, …, `Pass`, `ImprovementRequired`). The long `fhrs_4_en-gb` style keys are silently ignored. For 0–5 ratings the app sends `ratingOperatorKey=GreaterThanOrEqual`, so "4 or better" works.
 - A missing inspection date comes back as `0001-01-01` or `1901-01-01`.
 - The API's own `Distance` field is unreliable, so distances are worked out in the browser from the searched point.
-- Busy areas can have thousands of results within a mile. The app shows the nearest 100, and **Show more places** loads the next page.
+- Busy areas can have thousands of results within a mile (27,000+ within 5 miles of central London). Results are paginated 50 per page, nearest first, with Previous / Next and numbered pages. The map shows the current page's pins, and the page number is kept in the URL (`?p=3`). The FSA API returns pages in distance order, so the pages run continuously.
 
 Businesses with no coordinates stay in the list, marked "No map location", and don't get a pin.
 

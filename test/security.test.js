@@ -38,7 +38,7 @@ test('rejects unknown, duplicated, malformed or out-of-range parameters', () => 
     `${VALID}&latitude=51.6`,                                   // duplicate
     VALID.replace('pageSize=100', 'pageSize=5000'),             // amplification
     VALID.replace('pageNumber=1', 'pageNumber=0'),
-    VALID.replace('pageNumber=1', 'pageNumber=999'),
+    VALID.replace('pageNumber=1', 'pageNumber=1001'),            // past the page cap
     VALID.replace('maxDistanceLimit=1', 'maxDistanceLimit=50'),
     VALID.replace('latitude=51.50101', 'latitude=40.7'),        // outside UK
     VALID.replace('latitude=51.50101', 'latitude=1e1'),
