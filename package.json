@@ -1,0 +1,14 @@
+{
+  "name": "foodcheck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Find food hygiene ratings near any UK postcode, on a map and in a list.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

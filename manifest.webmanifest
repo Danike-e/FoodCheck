@@ -1,0 +1,20 @@
+{
+  "name": "FoodCheck – Food hygiene ratings",
+  "short_name": "FoodCheck",
+  "description": "Food hygiene ratings for places near any UK postcode, on a map and in a list.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF9F5",
+  "theme_color": "#FAF9F5",
+  "lang": "en-GB",
+  "categories": ["food", "utilities", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

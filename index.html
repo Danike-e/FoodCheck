@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>FoodCheck · Food hygiene ratings near you</title>
+  <meta name="description" content="Enter a UK postcode to see food hygiene ratings for nearby restaurants, takeaways, shops and more, on a map and in a list.">
+
+  <!-- PWA / iOS -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#FAF9F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1F1E1D" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FoodCheck">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <!-- Fonts: free, close stand-ins for Claude's serif + sans pairing -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap">
+
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#results-heading">Skip to results</a>
+  <div class="layout">
+
+  <header class="masthead">
+    <div class="masthead__inner">
+      <a class="brand" href="./" aria-label="FoodCheck home">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="currentColor"/>
+          <circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="2.2"/>
+          <path d="M11.8 16.3l2.9 2.9 5.6-6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand__name">FoodCheck</span>
+      </a>
+      <h1 class="masthead__title">Food hygiene ratings near you</h1>
+      <p class="masthead__tagline">Official inspection results from the Food Standards Agency, for anywhere in the UK.</p>
+    </div>
+  </header>
+
+  <section class="search" aria-label="Search">
+    <form class="search__form" id="search-form" novalidate>
+      <div class="search__labelrow">
+        <label class="search__label" for="postcode">Postcode</label>
+        <button class="btn btn--quiet search__locate" type="button" id="locate-btn">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3" fill="currentColor"/><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Use my location
+        </button>
+      </div>
+      <div class="search__row">
+        <div class="search__field">
+          <svg class="search__icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input id="postcode" name="postcode" type="text" placeholder="e.g. SW1A 1AA"
+                 autocomplete="postal-code" autocapitalize="characters" autocorrect="off"
+                 spellcheck="false" enterkeyhint="search" maxlength="10"
+                 aria-describedby="postcode-error">
+        </div>
+        <button class="btn btn--primary" type="submit">Search</button>
+      </div>
+      <p class="search__error" id="postcode-error" role="alert" hidden></p>
+    </form>
+
+    <fieldset class="filters" id="filters">
+      <legend class="visually-hidden">Filters</legend>
+      <div class="filter">
+        <label for="min-rating">Rating</label>
+        <select id="min-rating">
+          <!-- Options are swapped by app.js to suit the scheme (FHRS 0–5 or Scottish FHIS) -->
+          <option value="">Any rating</option>
+        </select>
+      </div>
+      <div class="filter">
+        <label for="business-type">Type of business</label>
+        <select id="business-type">
+          <option value="">All types</option>
+        </select>
+      </div>
+      <div class="filter filter--radius" role="radiogroup" aria-labelledby="radius-label">
+        <span class="filter__label" id="radius-label">Within</span>
+        <div class="segmented">
+          <input type="radio" name="radius" id="r1" value="1" checked><label for="r1">1 mi</label>
+          <input type="radio" name="radius" id="r2" value="2"><label for="r2">2 mi</label>
+          <input type="radio" name="radius" id="r5" value="5"><label for="r5">5 mi</label>
+        </div>
+      </div>
+    </fieldset>
+  </section>
+
+  <div class="map-pane">
+    <div id="map" role="region" aria-label="Map of nearby food businesses"></div>
+    <div class="map-pane__loading" id="map-loading" hidden><span class="spinner" aria-hidden="true"></span></div>
+  </div>
+
+  <main class="list-pane" id="results">
+      <div class="list-pane__head">
+        <h2 class="list-pane__title" id="results-heading" tabindex="-1">Nearby ratings</h2>
+        <p class="list-pane__summary" id="summary" aria-live="polite"></p>
+        <ul class="legend" id="legend" aria-label="Rating key"></ul>
+      </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+      <ol class="places" id="places" aria-labelledby="results-heading"></ol>
+      <button class="btn btn--outline load-more" id="load-more" type="button" hidden>Show more places</button>
+
+      <footer class="footer">
+        <p>Contains public sector information licensed under the
+          <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>.
+          Data from the <a href="https://ratings.food.gov.uk/" rel="noopener" target="_blank">Food Standards Agency</a>.
+          Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors.
+          Postcode lookup by <a href="https://postcodes.io/" rel="noopener" target="_blank">postcodes.io</a>.</p>
+        <p class="footer__note">FoodCheck is an independent tool and isn't affiliated with the Food Standards Agency. Always check the official record before relying on a rating.</p>
+      </footer>
+  </main>
+  </div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
