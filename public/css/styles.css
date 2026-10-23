@@ -175,6 +175,36 @@ button, input, select { font: inherit; color: inherit; }
 
 #map { position: absolute; inset: 0; }
 
+/* Full-screen map (toggled by the map's expand button) */
+.map-fullscreen, .map-fullscreen body { overflow: hidden; }
+.map-pane.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  height: auto;
+  min-height: 0;
+  border: 0;
+}
+.map-pane.is-fullscreen .leaflet-top { top: env(safe-area-inset-top); }
+.map-pane.is-fullscreen .leaflet-bottom { bottom: env(safe-area-inset-bottom); }
+.map-pane.is-fullscreen .leaflet-left { left: env(safe-area-inset-left); }
+.map-pane.is-fullscreen .leaflet-right { right: env(safe-area-inset-right); }
+
+.map-fs-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.map-fs-btn:hover { background: var(--surface-2); }
+.map-fs-btn svg { width: 20px; height: 20px; }
+
 .list-pane {
   flex: 1;
   padding: 20px var(--gutter) 0;

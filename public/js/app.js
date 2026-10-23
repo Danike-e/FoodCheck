@@ -65,6 +65,62 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
 }).addTo(map);
 
+/* ---------- Full-screen map ----------
+ * The map pane expands to cover the whole window. This is done with CSS rather
+ * than the Fullscreen API, which iPhone Safari only supports for video, so it
+ * behaves the same everywhere (including the installed app). While expanded,
+ * the rest of the page is made inert so keyboard and screen-reader users stay
+ * in the map; Escape or the button returns to the normal layout.
+ */
+const ICON_EXPAND = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 8V3.5H8M12 3.5h4.5V8M16.5 12v4.5H12M8 16.5H3.5V12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_COLLAPSE = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 3.5V8H3.5M16.5 8H12V3.5M12 16.5V12h4.5M3.5 12H8v4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+let fullscreenBtn = null;
+
+const FullscreenControl = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd() {
+    const wrap = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    fullscreenBtn = L.DomUtil.create('button', 'map-fs-btn', wrap);
+    fullscreenBtn.type = 'button';
+    L.DomEvent.disableClickPropagation(wrap);
+    fullscreenBtn.addEventListener('click', () => setMapFullscreen(!isMapFullscreen()));
+    updateFullscreenButton(false);
+    return wrap;
+  },
+});
+new FullscreenControl().addTo(map);
+
+const isMapFullscreen = () => document.documentElement.classList.contains('map-fullscreen');
+
+function updateFullscreenButton(on) {
+  const label = on ? 'Exit full screen map' : 'Show map full screen';
+  fullscreenBtn.innerHTML = on ? ICON_COLLAPSE : ICON_EXPAND;
+  fullscreenBtn.setAttribute('aria-label', label);
+  fullscreenBtn.setAttribute('aria-pressed', String(on));
+  fullscreenBtn.title = label;
+}
+
+function setMapFullscreen(on) {
+  const center = map.getCenter();
+  const zoom = map.getZoom();
+  document.documentElement.classList.toggle('map-fullscreen', on);
+  document.querySelector('.map-pane').classList.toggle('is-fullscreen', on);
+  for (const el of document.querySelectorAll('.skip-link, .masthead, .search, .list-pane')) el.inert = on;
+  updateFullscreenButton(on);
+  // Leaflet must re-measure after the container changes size; keep the same view.
+  map.invalidateSize({ animate: false });
+  map.setView(center, zoom, { animate: false });
+  fullscreenBtn.focus({ preventScroll: true });
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && isMapFullscreen() && !document.querySelector('dialog[open]')) {
+    // Let Escape close an open popup first; a second press leaves full screen.
+    if (document.querySelector('.leaflet-popup')) map.closePopup();
+    else setMapFullscreen(false);
+  }
+});
+
 const pinLayer = L.layerGroup().addTo(map);
 const markers = new Map(); // FHRSID -> L.Marker
 let originMarker = null;
@@ -371,7 +427,7 @@ function select(id, source) {
     }
   }
 
-  if (source === 'map' && item) {
+  if (source === 'map' && item && !isMapFullscreen()) {
     item.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest' });
   }
 }

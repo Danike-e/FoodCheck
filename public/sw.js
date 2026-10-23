@@ -11,7 +11,7 @@
  * Bump VERSION whenever shell files change.
  */
 
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL_CACHE = `foodcheck-shell-${VERSION}`;
 const RUNTIME_CACHE = `foodcheck-runtime-${VERSION}`;
 const RUNTIME_MAX_ENTRIES = 60;

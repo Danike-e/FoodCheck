@@ -114,6 +114,7 @@ Optional hardening on Vercel:
 
 - The palette is warm paper and clay, with a serif display face (Source Serif 4) paired with DM Sans. Claude's own typefaces are proprietary, so these are close free alternatives, self-hosted.
 - Rating colours were chosen so the text on each badge meets WCAG AA contrast. Colour is never the only signal: badges and pins always show the number, ✓ / ! or text, and each card spells out what the rating means ("Generally satisfactory").
+- The map has a **full-screen** button (top right). It expands the map to fill the window using CSS rather than the Fullscreen API, which iPhone Safari only allows for video, so it works the same on every device and in the installed app. The rest of the page is made `inert` while it's open, and Escape or the button closes it.
 - On phones the map sits above the list and stays pinned while you scroll, so tapping a card always shows its pin. From 960px wide, the sidebar holds search and results and the map fills the rest of the screen.
 - **Settings** offers Light, Dark or Match device. The choice is saved on the device and applied before the page paints, so there's no flash, on every page.
 - **Accessibility:** the app targets WCAG 2.2 AA. It has zero axe-core violations on every page and state, in both themes. Text meets 4.5:1 contrast and form controls 3:1. It works by keyboard with visible focus, uses a native modal `<dialog>` for settings, live regions for results, and reflows to 320 px. See `public/accessibility.html`.
